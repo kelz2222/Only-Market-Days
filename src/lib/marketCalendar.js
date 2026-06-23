@@ -52,51 +52,75 @@ function daysDiff(a, b) {
   return Math.round((stripTime(a) - stripTime(b)) / (1000 * 60 * 60 * 24))
 }
 
+// Get the next future market date for a given anchor
+// Always returns a date >= today
 function getNextMarketDate(anchor, fromDate = new Date()) {
-  const diff = daysDiff(fromDate, anchor)
-  if (diff < 0) {
-    const cyclesPassed = Math.floor(Math.abs(diff) / CYCLE_DAYS)
-    const candidate = new Date(anchor)
-    candidate.setDate(candidate.getDate() + (cyclesPassed * CYCLE_DAYS))
-    if (daysDiff(candidate, fromDate) < 0) {
-      candidate.setDate(candidate.getDate() + CYCLE_DAYS)
-    }
-    return candidate
-  } else {
-    return new Date(anchor)
+  const today = stripTime(fromDate)
+  const anchorStripped = stripTime(anchor)
+  
+  // How many days since anchor
+  const diffFromAnchor = Math.round((today - anchorStripped) / (1000 * 60 * 60 * 24))
+  
+  if (diffFromAnchor < 0) {
+    // Anchor is in the future — return anchor itself
+    return new Date(anchorStripped)
   }
+  
+  // How many full cycles have passed
+  const cyclesPassed = Math.floor(diffFromAnchor / CYCLE_DAYS)
+  
+  // Most recent past market date
+  const lastMarket = new Date(anchorStripped)
+  lastMarket.setDate(lastMarket.getDate() + cyclesPassed * CYCLE_DAYS)
+  
+  // Next upcoming market date
+  const nextMarket = new Date(lastMarket)
+  nextMarket.setDate(nextMarket.getDate() + CYCLE_DAYS)
+  
+  // If today IS a market day, still return next one (today's market already handled separately)
+  if (Math.round((today - stripTime(lastMarket)) / (1000 * 60 * 60 * 24)) === 0) {
+    return nextMarket
+  }
+  
+  return nextMarket
 }
 
+// Returns which market is active TODAY (if any)
 export function getTodaysMarket(now = new Date()) {
   const today = stripTime(now)
+  
   for (const market of Object.values(MARKETS)) {
-    const diff = daysDiff(today, market.anchor)
-    if (diff >= 0 && diff % CYCLE_DAYS === 0) return market
-    if (diff < 0 && Math.abs(diff) % CYCLE_DAYS === 0) return market
+    const anchorStripped = stripTime(market.anchor)
+    const diff = Math.round((today - anchorStripped) / (1000 * 60 * 60 * 24))
+    
+    // Today is a market day if diff is a non-negative multiple of CYCLE_DAYS
+    if (diff >= 0 && diff % CYCLE_DAYS === 0) {
+      return market
+    }
+    
+    // Also handle if anchor is today or in future (diff negative but zero mod)
+    if (diff === 0) {
+      return market
+    }
   }
   return null
 }
 
+// Returns the next upcoming market and its date
+// Never returns today — always the NEXT one coming
 export function getNextMarket(now = new Date()) {
+  const today = stripTime(now)
+  
   const ntighaNext = getNextMarketDate(ORIE_NTIGHA_ANCHOR, now)
   const ukwuNext   = getNextMarketDate(ORIE_UKWU_ANCHOR, now)
-  const ntighaDay  = stripTime(ntighaNext)
-  const ukwuDay    = stripTime(ukwuNext)
-  const today      = stripTime(now)
-
-  const ntighaIsToday = daysDiff(ntighaDay, today) === 0
-  const ukwuIsToday   = daysDiff(ukwuDay, today) === 0
-
-  let ntighaFuture = new Date(ntighaNext)
-  let ukwuFuture   = new Date(ukwuNext)
-
-  if (ntighaIsToday) ntighaFuture.setDate(ntighaFuture.getDate() + CYCLE_DAYS)
-  if (ukwuIsToday)   ukwuFuture.setDate(ukwuFuture.getDate() + CYCLE_DAYS)
-
-  if (ntighaFuture <= ukwuFuture) {
-    return { market: MARKETS.NTIGHA, date: ntighaFuture }
+  
+  const ntighaStripped = stripTime(ntighaNext)
+  const ukwuStripped   = stripTime(ukwuNext)
+  
+  if (ntighaStripped <= ukwuStripped) {
+    return { market: MARKETS.NTIGHA, date: ntighaNext }
   } else {
-    return { market: MARKETS.UKWU, date: ukwuFuture }
+    return { market: MARKETS.UKWU, date: ukwuNext }
   }
 }
 
@@ -118,7 +142,9 @@ export function isOrderOpen(now = new Date()) {
 
 export function daysUntilNext(now = new Date()) {
   const { date } = getNextMarket(now)
-  return daysDiff(date, now)
+  const today = stripTime(now)
+  const next = stripTime(date)
+  return Math.round((next - today) / (1000 * 60 * 60 * 24))
 }
 
 export function getTagline(market, now = new Date()) {
