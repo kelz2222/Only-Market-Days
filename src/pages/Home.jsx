@@ -50,12 +50,29 @@ export default function Home() {
       <Navbar />
       <CountdownBanner />
 
-      <div style={{ background: 'linear-gradient(160deg, var(--green) 0%, var(--green-light) 60%, #40916C 100%)', padding: '48px 24px 56px', position: 'relative', overflow: 'hidden' }}>
+      {/* Hero */}
+      <div style={{
+        background: 'linear-gradient(160deg, var(--green) 0%, var(--green-light) 60%, #40916C 100%)',
+        padding: '48px 24px 56px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
         <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
         <div style={{ position: 'relative', maxWidth: 480, margin: '0 auto' }}>
-          <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 12 }}>ISIALA NGWA NORTH • ABIA STATE</div>
-          <h1 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 'clamp(32px, 8vw, 52px)', fontWeight: 900, lineHeight: 1.1, marginBottom: 16 }}>
-            Fresh from the<br /><span style={{ color: 'var(--gold)' }}>village.</span><br />Only on market days.
+          <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 12 }}>
+            ISIALA NGWA NORTH • ABIA STATE
+          </div>
+          <h1 style={{
+            fontFamily: 'Playfair Display, serif',
+            color: 'white',
+            fontSize: 'clamp(32px, 8vw, 52px)',
+            fontWeight: 900,
+            lineHeight: 1.1,
+            marginBottom: 16,
+          }}>
+            Fresh from the<br />
+            <span style={{ color: 'var(--gold)' }}>village.</span><br />
+            Only on market days.
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, lineHeight: 1.6, marginBottom: 28, maxWidth: 380 }}>
             Direct from Orie Ntigha and Orie Ukwu markets to Aba and Umuahia. No middleman. No markup. Just fresh.
@@ -63,17 +80,25 @@ export default function Home() {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {(orderOpen || preorderOpen) ? (
               <Link to="/market" className="btn-primary" style={{ fontSize: 16, padding: '14px 28px' }}>
-                <ShoppingBasket size={20} />{preorderOpen && !orderOpen ? 'Pre-order Now' : 'Shop Market'}
+                <ShoppingBasket size={20} />
+                {preorderOpen && !orderOpen ? 'Pre-order Now' : 'Shop Market'}
               </Link>
             ) : (
               <button className="btn-primary" style={{ fontSize: 16, padding: '14px 28px' }} onClick={() => setShowPopup(true)}>
-                <Bell size={20} />Next Market: {nextMarket.name}
+                <Bell size={20} />
+                Next Market: {nextMarket.name}
               </button>
             )}
-            <Link to="/market" className="btn-secondary" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', fontSize: 15 }}>Browse Products</Link>
+            <Link to="/market" className="btn-secondary" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', fontSize: 15 }}>
+              Browse Products
+            </Link>
           </div>
           <div style={{ display: 'flex', gap: 24, marginTop: 32, flexWrap: 'wrap' }}>
-            {[{ icon: '🌿', text: 'Farm fresh' }, { icon: '🚐', text: 'Aba & Umuahia delivery' }, { icon: '📦', text: 'Food grade packaging' }].map(({ icon, text }) => (
+            {[
+              { icon: '🌿', text: 'Farm fresh' },
+              { icon: '🚐', text: 'Aba & Umuahia delivery' },
+              { icon: '📦', text: 'Food grade packaging' },
+            ].map(({ icon, text }) => (
               <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>
                 <span>{icon}</span><span>{text}</span>
               </div>
@@ -82,24 +107,41 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Active market card */}
       {todayMarket && (
         <div style={{ padding: '0 16px', marginTop: -20 }}>
-          <div style={{ background: 'white', borderRadius: 16, padding: '20px', boxShadow: 'var(--shadow-lg)', borderLeft: '4px solid var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{
+            background: 'white', borderRadius: 16, padding: '20px',
+            boxShadow: 'var(--shadow-lg)', borderLeft: '4px solid var(--orange)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+          }}>
             <div>
               <div style={{ fontSize: 12, color: 'var(--orange)', fontWeight: 600, marginBottom: 4 }}>🌿 OPEN TODAY</div>
               <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700 }}>{todayMarket.name}</div>
               <div style={{ fontSize: 13, color: '#666' }}>{todayMarket.location}</div>
             </div>
-            <Link to="/market" className="btn-primary" style={{ whiteSpace: 'nowrap', padding: '12px 20px' }}>Shop Now <ArrowRight size={16} /></Link>
+            <Link to="/market" className="btn-primary" style={{ whiteSpace: 'nowrap', padding: '12px 20px' }}>
+              Shop Now <ArrowRight size={16} />
+            </Link>
           </div>
         </div>
       )}
 
+      {/* Categories */}
       <div style={{ padding: '36px 16px 0' }}>
-        <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, marginBottom: 16 }}>What we carry</h2>
+        <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
+          What we carry
+        </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 10 }}>
           {CATEGORIES.map(cat => (
-            <Link key={cat.slug} to={`/market?category=${cat.slug}`} style={{ background: 'white', borderRadius: 12, padding: '16px 8px', textAlign: 'center', boxShadow: 'var(--shadow)', display: 'block' }}>
+            <Link key={cat.slug} to={`/market?category=${cat.slug}`} style={{
+              background: 'white', borderRadius: 12, padding: '16px 8px',
+              textAlign: 'center', boxShadow: 'var(--shadow)', display: 'block',
+              transition: 'transform 0.2s',
+            }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+            >
               <div style={{ fontSize: 28, marginBottom: 6 }}>{cat.emoji}</div>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--charcoal)' }}>{cat.name}</div>
             </Link>
@@ -107,22 +149,36 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Seasonal intelligence */}
       {currentSeasonal.length > 0 && (
         <div style={{ padding: '36px 16px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <TrendingDown size={20} color="var(--gold)" />
-            <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700 }}>What's cheaper now</h2>
+            <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700 }}>
+              What's cheaper now
+            </h2>
           </div>
-          <div style={{ fontSize: 13, color: '#666', marginBottom: 16 }}>{getSeasonLabel()} — buy direct and save vs Aba market prices</div>
+          <div style={{ fontSize: 13, color: '#666', marginBottom: 16 }}>
+            {getSeasonLabel()} — buy direct and save vs Aba market prices
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {currentSeasonal.map(item => (
-              <div key={item.name} style={{ background: 'white', borderRadius: 12, padding: '16px', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div key={item.name} style={{
+                background: 'white', borderRadius: 12, padding: '16px',
+                boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', gap: 14,
+              }}>
                 <div style={{ fontSize: 32 }}>{item.emoji}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{item.name}</div>
                   <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
-                    <div><div style={{ color: '#888' }}>Village price</div><div style={{ color: 'var(--green)', fontWeight: 700 }}>{item.villagePrice}</div></div>
-                    <div><div style={{ color: '#888' }}>City price</div><div style={{ color: '#999', textDecoration: 'line-through' }}>{item.cityPrice}</div></div>
+                    <div>
+                      <div style={{ color: '#888' }}>Village price</div>
+                      <div style={{ color: 'var(--green)', fontWeight: 700 }}>{item.villagePrice}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#888' }}>City price</div>
+                      <div style={{ color: '#999', textDecoration: 'line-through' }}>{item.cityPrice}</div>
+                    </div>
                   </div>
                 </div>
                 <div style={{ background: 'rgba(27,67,50,0.08)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
@@ -135,36 +191,89 @@ export default function Home() {
         </div>
       )}
 
+      {/* How it works */}
       <div style={{ padding: '36px 16px 0' }}>
-        <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, marginBottom: 20 }}>How it works</h2>
-        {[
-          { step: '01', title: 'Order before 10AM', desc: 'Browse and order on market morning. Or pre-order the night before for guaranteed first pick.', icon: '📱' },
-          { step: '02', title: 'We shop for you', desc: 'Our market agent buys your items fresh from the sellers at Orie Ntigha or Orie Ukwu.', icon: '🛒' },
-          { step: '03', title: 'Packaged clean', desc: 'Every item is sorted, prepped and packed in food-grade transparent bags.', icon: '📦' },
-          { step: '04', title: 'Collect in your city', desc: 'Pick up in Aba from 3PM or Umuahia from 12:30PM. Or pay a keke for door delivery.', icon: '🚐' },
-        ].map(({ step, title, desc, icon }, i) => (
-          <div key={step} style={{ display: 'flex', gap: 16, position: 'relative' }}>
-            {i < 3 && <div style={{ position: 'absolute', left: 20, top: 52, bottom: 0, width: 2, background: 'linear-gradient(to bottom, var(--green-muted), transparent)' }} />}
-            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, zIndex: 1 }}>{icon}</div>
-            <div style={{ paddingBottom: 28 }}>
-              <div style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: 'var(--green)', marginBottom: 4 }}>{step}</div>
-              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{title}</div>
-              <div style={{ fontSize: 14, color: '#666', lineHeight: 1.5 }}>{desc}</div>
+        <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, marginBottom: 20 }}>
+          How it works
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {[
+            { step: '01', title: 'Order before 10AM', desc: 'Browse and order on market morning. Or pre-order the night before for guaranteed first pick.', icon: '📱' },
+            { step: '02', title: 'We shop for you', desc: 'Our market agent buys your items fresh from the sellers at Orie Ntigha or Orie Ukwu.', icon: '🛒' },
+            { step: '03', title: 'Packaged clean', desc: 'Every item is sorted, prepped and packed in food-grade transparent bags.', icon: '📦' },
+            { step: '04', title: 'Collect in your city', desc: 'Pick up in Aba from 3PM or Umuahia from 12:30PM. Or pay a keke for door delivery.', icon: '🚐' },
+          ].map(({ step, title, desc, icon }, i) => (
+            <div key={step} style={{ display: 'flex', gap: 16, position: 'relative' }}>
+              {i < 3 && (
+                <div style={{ position: 'absolute', left: 20, top: 52, bottom: 0, width: 2, background: 'linear-gradient(to bottom, var(--green-muted), transparent)' }} />
+              )}
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, zIndex: 1 }}>
+                {icon}
+              </div>
+              <div style={{ paddingBottom: 28 }}>
+                <div style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: 'var(--green)', marginBottom: 4 }}>{step}</div>
+                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{title}</div>
+                <div style={{ fontSize: 14, color: '#666', lineHeight: 1.5 }}>{desc}</div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
+      {/* Next market preview */}
       <div style={{ padding: '36px 16px 0' }}>
         <div style={{ background: 'var(--green)', borderRadius: 16, padding: '24px', textAlign: 'center' }}>
-          <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>COMING UP</div>
-          <h3 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 28, fontWeight: 700, marginBottom: 4 }}>{nextMarket.name}</h3>
-          <div style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 20 }}>{formatMarketDate(nextDate)}</div>
-          <button className="btn-secondary" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', margin: '0 auto', display: 'flex' }}>
-            <Bell size={16} />Notify me the evening before
+          <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>
+            COMING UP
+          </div>
+          <h3 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 28, fontWeight: 700, marginBottom: 4 }}>
+            {nextMarket.name}
+          </h3>
+          <div style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 20 }}>
+            {formatMarketDate(nextDate)}
+          </div>
+          <button
+            className="btn-secondary"
+            style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', margin: '0 auto', display: 'flex' }}
+            onClick={() => setShowPopup(true)}
+          >
+            <Bell size={16} />
+            Notify me the evening before
           </button>
         </div>
       </div>
+
+      {/* Staff access links */}
+      <div style={{ padding: '32px 16px 0', textAlign: 'center' }}>
+        <div style={{ fontSize: 11, color: '#bbb', marginBottom: 10, letterSpacing: 1 }}>
+          STAFF ACCESS
+        </div>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+          <Link to="/agent" style={{
+            fontSize: 13,
+            color: '#666',
+            border: '1px solid #ddd',
+            borderRadius: 8,
+            padding: '8px 18px',
+            background: 'white',
+            boxShadow: 'var(--shadow)',
+          }}>
+            🌿 Agent Portal
+          </Link>
+          <Link to="/owner" style={{
+            fontSize: 13,
+            color: '#666',
+            border: '1px solid #ddd',
+            borderRadius: 8,
+            padding: '8px 18px',
+            background: 'white',
+            boxShadow: 'var(--shadow)',
+          }}>
+            📊 Owner Dashboard
+          </Link>
+        </div>
+      </div>
+
     </div>
   )
 }
