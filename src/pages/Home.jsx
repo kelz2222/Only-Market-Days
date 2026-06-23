@@ -137,11 +137,7 @@ export default function Home() {
             <Link key={cat.slug} to={`/market?category=${cat.slug}`} style={{
               background: 'white', borderRadius: 12, padding: '16px 8px',
               textAlign: 'center', boxShadow: 'var(--shadow)', display: 'block',
-              transition: 'transform 0.2s',
-            }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-            >
+            }}>
               <div style={{ fontSize: 28, marginBottom: 6 }}>{cat.emoji}</div>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--charcoal)' }}>{cat.name}</div>
             </Link>
@@ -221,7 +217,7 @@ export default function Home() {
       </div>
 
       {/* Next market preview */}
-      <div style={{ padding: '36px 16px 0' }}>
+      <div style={{ padding: '36px 16px 40px' }}>
         <div style={{ background: 'var(--green)', borderRadius: 16, padding: '24px', textAlign: 'center' }}>
           <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>
             COMING UP
@@ -240,37 +236,6 @@ export default function Home() {
             <Bell size={16} />
             Notify me the evening before
           </button>
-        </div>
-      </div>
-
-      {/* Staff access links */}
-      <div style={{ padding: '32px 16px 0', textAlign: 'center' }}>
-        <div style={{ fontSize: 11, color: '#bbb', marginBottom: 10, letterSpacing: 1 }}>
-          STAFF ACCESS
-        </div>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-          <Link to="/agent" style={{
-            fontSize: 13,
-            color: '#666',
-            border: '1px solid #ddd',
-            borderRadius: 8,
-            padding: '8px 18px',
-            background: 'white',
-            boxShadow: 'var(--shadow)',
-          }}>
-            🌿 Agent Portal
-          </Link>
-          <Link to="/owner" style={{
-            fontSize: 13,
-            color: '#666',
-            border: '1px solid #ddd',
-            borderRadius: 8,
-            padding: '8px 18px',
-            background: 'white',
-            boxShadow: 'var(--shadow)',
-          }}>
-            📊 Owner Dashboard
-          </Link>
         </div>
       </div>
 
