@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1B4332" />
+    <meta name="description" content="Fresh farm produce from Orie Ntigha and Orie Ukwu markets, delivered to Aba and Umuahia. Only on market days." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <title>Only Market Days</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --green: #1B4332;
+        --green-light: #2D6A4F;
+        --green-muted: #74C69D;
+        --cream: #F5F0E8;
+        --cream-dark: #EDE8DF;
+        --orange: #E85D04;
+        --orange-light: #FF6B1A;
+        --charcoal: #2D2D2D;
+        --gold: #D4A017;
+        --white: #FFFFFF;
+        --shadow: 0 2px 12px rgba(27,67,50,0.10);
+        --shadow-lg: 0 8px 32px rgba(27,67,50,0.15);
+        --radius: 12px;
+        --radius-sm: 8px;
+      }
+      html { scroll-behavior: smooth; }
+      body {
+        font-family: 'DM Sans', sans-serif;
+        background: var(--cream);
+        color: var(--charcoal);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+      #root { min-height: 100vh; }
+      h1, h2, h3 { font-family: 'Playfair Display', serif; }
+      button { cursor: pointer; border: none; outline: none; font-family: 'DM Sans', sans-serif; }
+      input, select, textarea { font-family: 'DM Sans', sans-serif; }
+      a { text-decoration: none; color: inherit; }
+      img { display: block; max-width: 100%; }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: var(--cream-dark); }
+      ::-webkit-scrollbar-thumb { background: var(--green-muted); border-radius: 3px; }
+      .btn-primary {
+        background: var(--orange);
+        color: white;
+        padding: 14px 28px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 15px;
+        transition: background 0.2s, transform 0.1s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-primary:hover { background: var(--orange-light); transform: translateY(-1px); }
+      .btn-primary:active { transform: translateY(0); }
+      .btn-secondary {
+        background: transparent;
+        color: var(--green);
+        padding: 13px 28px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 15px;
+        border: 2px solid var(--green);
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-secondary:hover { background: var(--green); color: white; }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        font-family: 'DM Mono', monospace;
+      }
+      .badge-season { background: var(--gold); color: white; }
+      .badge-fresh { background: var(--green-muted); color: var(--green); }
+      .badge-bulk { background: var(--charcoal); color: white; }
+      .badge-preorder { background: var(--orange); color: white; }
+      .card {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+      .fade-in { animation: fadeIn 0.4s ease forwards; }
+      .slide-up { animation: slideUp 0.5s ease forwards; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
