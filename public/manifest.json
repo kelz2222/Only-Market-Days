@@ -1,0 +1,25 @@
+{
+  "name": "Only Market Days",
+  "short_name": "MarketDays",
+  "description": "Fresh farm produce from Isiala Ngwa North. Only on market days.",
+  "theme_color": "#1B4332",
+  "background_color": "#F5F0E8",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
