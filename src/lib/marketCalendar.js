@@ -1,5 +1,5 @@
-const ORIE_NTIGHA_ANCHOR = new Date('2025-06-18T00:00:00')
-const ORIE_UKWU_ANCHOR   = new Date('2025-06-22T00:00:00')
+const ORIE_NTIGHA_ANCHOR = new Date('2026-06-18T00:00:00')
+const ORIE_UKWU_ANCHOR   = new Date('2026-06-22T00:00:00')
 const CYCLE_DAYS = 8
 
 export const MARKETS = {
