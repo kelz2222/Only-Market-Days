@@ -75,7 +75,7 @@ export default function Home() {
             Only on market days.
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, lineHeight: 1.6, marginBottom: 28, maxWidth: 380 }}>
-            Direct from Orie Ntigha and Orie Ukwu markets to Aba and Umuahia. No middleman. No markup. Just fresh.
+            Direct from Orie Ntigha and Orie Ukwu markets to Aba and Umuahia. No middlemen. No markup. Just fresh.
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {(orderOpen || preorderOpen) ? (
