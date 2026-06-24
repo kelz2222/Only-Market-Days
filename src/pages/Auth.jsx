@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, Phone } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { getTodaysMarket } from '../lib/marketCalendar'
 import toast from 'react-hot-toast'
@@ -75,41 +75,85 @@ function SpinningMark({ size = 52, isMarketDay = false }) {
   )
 }
 
+// Clean phone number — strip spaces and dashes
+function cleanPhone(phone) {
+  return phone.replace(/\D/g, '')
+}
+
+// Generate internal email from phone number
+// Buyer never sees this — it's just for Supabase Auth
+function phoneToEmail(phone) {
+  return `${cleanPhone(phone)}@onlymarketdays.app`
+}
+
 export default function Auth() {
   const [mode, setMode] = useState('login')
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({
-    email: '', password: '', fullName: '', whatsapp: '', zoneId: ZONES[0].id
-  })
 
   const isMarketDay = !!getTodaysMarket(new Date())
+
+  const [form, setForm] = useState({
+    fullName: '',
+    whatsapp: '',
+    password: '',
+    zoneId: ZONES[0].id,
+  })
 
   function handleChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  function validate() {
+    const phone = cleanPhone(form.whatsapp)
+    if (mode === 'signup') {
+      if (!form.fullName.trim()) { toast.error('Please enter your full name'); return false }
+      if (phone.length < 10) { toast.error('Please enter a valid phone number'); return false }
+      if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return false }
+    }
+    if (mode === 'login') {
+      if (phone.length < 10) { toast.error('Please enter your WhatsApp number'); return false }
+      if (!form.password) { toast.error('Please enter your password'); return false }
+    }
+    return true
+  }
+
   async function handleSubmit() {
+    if (!validate()) return
     setLoading(true)
+
+    // Convert phone to internal email for Supabase
+    const internalEmail = phoneToEmail(form.whatsapp)
+
     try {
       if (mode === 'login') {
-        await signIn({ email: form.email, password: form.password })
+        await signIn({ email: internalEmail, password: form.password })
         toast.success('Welcome back!')
         navigate('/')
       } else {
-        if (!form.fullName || !form.whatsapp) {
-          toast.error('Please fill in all fields')
-          setLoading(false)
-          return
-        }
-        await signUp(form)
+        await signUp({
+          email: internalEmail,
+          password: form.password,
+          fullName: form.fullName,
+          whatsapp: cleanPhone(form.whatsapp),
+          zoneId: form.zoneId,
+        })
         toast.success('Account created! Welcome to Only Market Days.')
         navigate('/')
       }
     } catch (err) {
-      toast.error(err.message || 'Something went wrong')
+      // Give user-friendly error messages
+      const msg = err.message || ''
+      if (msg.includes('already registered')) {
+        toast.error('This number already has an account. Please sign in.')
+        setMode('login')
+      } else if (msg.includes('Invalid login')) {
+        toast.error('Wrong phone number or password')
+      } else {
+        toast.error(msg || 'Something went wrong. Try again.')
+      }
     }
     setLoading(false)
   }
@@ -119,7 +163,10 @@ export default function Auth() {
 
       {/* Green header */}
       <div style={{ background: 'var(--green)', padding: '20px 20px 48px' }}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green-muted)', fontSize: 14, marginBottom: 28 }}>
+        <Link to="/" style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          color: 'var(--green-muted)', fontSize: 14, marginBottom: 28,
+        }}>
           <ArrowLeft size={16} /> Back
         </Link>
 
@@ -153,7 +200,7 @@ export default function Auth() {
         <p style={{ color: 'var(--green-muted)', fontSize: 14, marginTop: 4 }}>
           {mode === 'login'
             ? 'Welcome back. Your fresh produce awaits.'
-            : 'Create your account to start ordering.'}
+            : 'Create your account to start ordering fresh.'}
         </p>
       </div>
 
@@ -162,13 +209,18 @@ export default function Auth() {
         <div className="card" style={{ padding: '28px 24px', maxWidth: 420, margin: '0 auto' }}>
 
           {/* Tab switcher */}
-          <div style={{ display: 'flex', background: 'var(--cream-dark)', borderRadius: 10, padding: 4, marginBottom: 28 }}>
+          <div style={{
+            display: 'flex', background: 'var(--cream-dark)',
+            borderRadius: 10, padding: 4, marginBottom: 28,
+          }}>
             {['login', 'signup'].map(m => (
               <button key={m} onClick={() => setMode(m)} style={{
-                flex: 1, padding: '10px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+                flex: 1, padding: '10px', borderRadius: 8,
+                fontSize: 14, fontWeight: 600,
                 background: mode === m ? 'var(--green)' : 'transparent',
                 color: mode === m ? 'white' : '#888',
                 border: 'none', cursor: 'pointer',
+                transition: 'all 0.2s',
               }}>
                 {m === 'login' ? 'Sign In' : 'Create Account'}
               </button>
@@ -176,54 +228,146 @@ export default function Auth() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* SIGNUP ONLY fields */}
             {mode === 'signup' && (
-              <>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>Full Name *</label>
-                  <input name="fullName" placeholder="Chioma Okafor" value={form.fullName} onChange={handleChange}
-                    style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1.5px solid var(--cream-dark)', fontSize: 14, outline: 'none', background: 'white', boxSizing: 'border-box' }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>WhatsApp Number *</label>
-                  <input name="whatsapp" type="tel" placeholder="08012345678" value={form.whatsapp} onChange={handleChange}
-                    style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1.5px solid var(--cream-dark)', fontSize: 14, outline: 'none', background: 'white', boxSizing: 'border-box' }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>Your City *</label>
-                  <select name="zoneId" value={form.zoneId} onChange={handleChange}
-                    style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1.5px solid var(--cream-dark)', fontSize: 14, outline: 'none', background: 'white', color: 'var(--charcoal)', boxSizing: 'border-box' }}>
-                    {ZONES.map(z => <option key={z.id} value={z.id}>{z.name} — {z.landmark}</option>)}
-                  </select>
-                </div>
-              </>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>
+                  Full Name *
+                </label>
+                <input
+                  name="fullName"
+                  placeholder="e.g. Chioma Okafor"
+                  value={form.fullName}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%', padding: '12px', borderRadius: 8,
+                    border: '1.5px solid var(--cream-dark)', fontSize: 14,
+                    outline: 'none', background: 'white', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
             )}
 
+            {/* WhatsApp number — both modes */}
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>Email Address *</label>
-              <input name="email" type="email" placeholder="you@example.com" value={form.email} onChange={handleChange}
-                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1.5px solid var(--cream-dark)', fontSize: 14, outline: 'none', background: 'white', boxSizing: 'border-box' }} />
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>
+                WhatsApp Number *
+              </label>
+              <div style={{ position: 'relative' }}>
+                <Phone size={15} style={{
+                  position: 'absolute', left: 12, top: '50%',
+                  transform: 'translateY(-50%)', color: '#aaa',
+                }} />
+                <input
+                  name="whatsapp"
+                  type="tel"
+                  placeholder="08012345678"
+                  value={form.whatsapp}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%', padding: '12px 12px 12px 36px',
+                    borderRadius: 8, border: '1.5px solid var(--cream-dark)',
+                    fontSize: 15, outline: 'none', background: 'white',
+                    boxSizing: 'border-box', fontFamily: 'DM Mono, monospace',
+                    letterSpacing: 1,
+                  }}
+                />
+              </div>
+              {mode === 'login' && (
+                <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
+                  Use the number you signed up with
+                </div>
+              )}
             </div>
 
+            {/* City — signup only */}
+            {mode === 'signup' && (
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>
+                  Your City *
+                </label>
+                <select
+                  name="zoneId"
+                  value={form.zoneId}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%', padding: '12px', borderRadius: 8,
+                    border: '1.5px solid var(--cream-dark)', fontSize: 14,
+                    outline: 'none', background: 'white',
+                    color: 'var(--charcoal)', boxSizing: 'border-box',
+                  }}
+                >
+                  {ZONES.map(z => (
+                    <option key={z.id} value={z.id}>
+                      {z.name} — {z.landmark}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Password — both modes */}
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>Password *</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>
+                Password *
+              </label>
               <div style={{ position: 'relative' }}>
-                <input name="password" type={showPw ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={handleChange}
-                  style={{ width: '100%', padding: '12px 40px 12px 12px', borderRadius: 8, border: '1.5px solid var(--cream-dark)', fontSize: 14, outline: 'none', background: 'white', boxSizing: 'border-box' }} />
-                <button onClick={() => setShowPw(!showPw)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#aaa', cursor: 'pointer' }}>
+                <input
+                  name="password"
+                  type={showPw ? 'text' : 'password'}
+                  placeholder={mode === 'signup' ? 'Create a password (min 6 characters)' : '••••••••'}
+                  value={form.password}
+                  onChange={handleChange}
+                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                  style={{
+                    width: '100%', padding: '12px 40px 12px 12px',
+                    borderRadius: 8, border: '1.5px solid var(--cream-dark)',
+                    fontSize: 14, outline: 'none', background: 'white',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <button
+                  onClick={() => setShowPw(!showPw)}
+                  style={{
+                    position: 'absolute', right: 12, top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: '#aaa', cursor: 'pointer',
+                  }}
+                >
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            <button onClick={handleSubmit} disabled={loading} className="btn-primary"
-              style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: 16, marginTop: 8, opacity: loading ? 0.7 : 1 }}>
-              {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+            {/* Submit */}
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="btn-primary"
+              style={{
+                width: '100%', justifyContent: 'center',
+                padding: '16px', fontSize: 16, marginTop: 8,
+                opacity: loading ? 0.7 : 1,
+              }}
+            >
+              {loading
+                ? 'Please wait...'
+                : mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           </div>
 
+          {/* Signup note */}
           {mode === 'signup' && (
-            <p style={{ fontSize: 12, color: '#888', textAlign: 'center', marginTop: 16, lineHeight: 1.5 }}>
-              By creating an account, you agree to receive WhatsApp notifications about your orders and market day alerts.
+            <p style={{ fontSize: 12, color: '#888', textAlign: 'center', marginTop: 16, lineHeight: 1.6 }}>
+              Your WhatsApp number is your login. You'll receive order updates on this number.
+            </p>
+          )}
+
+          {/* Forgot password hint */}
+          {mode === 'login' && (
+            <p style={{ fontSize: 12, color: '#888', textAlign: 'center', marginTop: 16 }}>
+              Forgot your password? Contact us on WhatsApp for a reset.
             </p>
           )}
         </div>
