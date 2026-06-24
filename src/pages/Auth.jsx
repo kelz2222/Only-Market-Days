@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Eye, EyeOff, ArrowLeft, Phone, Bell } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, Phone, Bell, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { getTodaysMarket } from '../lib/marketCalendar'
 import { supabase } from '../lib/supabase'
@@ -21,14 +21,7 @@ function SpinningMark({ size = 52, isMarketDay = false }) {
           display: block;
         }
       `}</style>
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 190 190"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ flexShrink: 0 }}
-      >
+      <svg width={size} height={size} viewBox="0 0 190 190" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
         <g className="omd-auth-spin">
           <path d="M95 95 L95 10 A85 85 0 0 0 10 95 Z"  fill="#1B4332"/>
           <path d="M95 95 L95 10 A85 85 0 0 1 180 95 Z" fill="#C0522B"/>
@@ -43,8 +36,7 @@ function SpinningMark({ size = 52, isMarketDay = false }) {
           {[0,45,90,135,180,225,270,315].map((angle) => {
             const rad = (angle * Math.PI) / 180
             return (
-              <line
-                key={angle}
+              <line key={angle}
                 x1={95 + Math.cos(rad) * 23} y1={95 + Math.sin(rad) * 23}
                 x2={95 + Math.cos(rad) * 33} y2={95 + Math.sin(rad) * 33}
                 stroke="#F7B731" strokeWidth="4" strokeLinecap="round"
@@ -72,7 +64,61 @@ function SpinningMark({ size = 52, isMarketDay = false }) {
 }
 
 // ============================================
-// WAITLIST SCREEN — for coming soon states
+// PASSWORD STRENGTH INDICATOR
+// ============================================
+function PasswordStrength({ password }) {
+  const len = password.length
+  if (len === 0) return null
+
+  const met = len >= 6
+  const strong = len >= 10
+
+  return (
+    <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Bar */}
+      <div style={{ height: 4, background: 'var(--cream-dark)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{
+          height: '100%',
+          borderRadius: 2,
+          width: strong ? '100%' : met ? '60%' : `${(len / 6) * 40}%`,
+          background: strong ? '#22c55e' : met ? 'var(--green)' : 'var(--orange)',
+          transition: 'width 0.3s ease, background 0.3s ease',
+        }} />
+      </div>
+
+      {/* Requirements */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {[
+          { label: 'At least 6 characters', met: len >= 6 },
+          { label: 'Strong password (10+ characters)', met: len >= 10 },
+        ].map(({ label, met: isMet }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{
+              width: 16, height: 16, borderRadius: '50%',
+              background: isMet ? '#22c55e' : 'var(--cream-dark)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background 0.2s',
+              flexShrink: 0,
+            }}>
+              {isMet && <Check size={10} color="white" strokeWidth={3} />}
+            </div>
+            <span style={{
+              fontSize: 11,
+              color: isMet ? '#22c55e' : '#aaa',
+              transition: 'color 0.2s',
+              fontWeight: isMet ? 600 : 400,
+            }}>
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ============================================
+// WAITLIST SCREEN
 // ============================================
 function WaitlistScreen({ region, onBack }) {
   const [whatsapp, setWhatsapp] = useState('')
@@ -118,14 +164,7 @@ function WaitlistScreen({ region, onBack }) {
 
   return (
     <div style={{ padding: '20px' }}>
-      {/* Coming soon card */}
-      <div style={{
-        background: 'var(--green)',
-        borderRadius: 16,
-        padding: '24px',
-        textAlign: 'center',
-        marginBottom: 24,
-      }}>
+      <div style={{ background: 'var(--green)', borderRadius: 16, padding: '24px', textAlign: 'center', marginBottom: 24 }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🌙</div>
         <h2 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
           Coming Soon to {region.name}
@@ -135,7 +174,6 @@ function WaitlistScreen({ region, onBack }) {
         </p>
       </div>
 
-      {/* Waitlist form */}
       <div className="card" style={{ padding: '24px' }}>
         <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
           Join the Waitlist
@@ -156,12 +194,7 @@ function WaitlistScreen({ region, onBack }) {
                 placeholder="08012345678"
                 value={whatsapp}
                 onChange={e => setWhatsapp(e.target.value)}
-                style={{
-                  width: '100%', padding: '12px 12px 12px 36px',
-                  borderRadius: 8, border: '1.5px solid var(--cream-dark)',
-                  fontSize: 15, outline: 'none', background: 'white',
-                  boxSizing: 'border-box', fontFamily: 'DM Mono, monospace',
-                }}
+                style={{ width: '100%', padding: '12px 12px 12px 36px', borderRadius: 8, border: '1.5px solid var(--cream-dark)', fontSize: 15, outline: 'none', background: 'white', boxSizing: 'border-box', fontFamily: 'DM Mono, monospace' }}
               />
             </div>
           </div>
@@ -175,12 +208,7 @@ function WaitlistScreen({ region, onBack }) {
               placeholder={`e.g. ${region.state === 'Enugu' ? 'Enugu, Nsukka' : region.state === 'Imo' ? 'Owerri, Orlu' : 'Your city'}`}
               value={city}
               onChange={e => setCity(e.target.value)}
-              style={{
-                width: '100%', padding: '12px',
-                borderRadius: 8, border: '1.5px solid var(--cream-dark)',
-                fontSize: 14, outline: 'none', background: 'white',
-                boxSizing: 'border-box',
-              }}
+              style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1.5px solid var(--cream-dark)', fontSize: 14, outline: 'none', background: 'white', boxSizing: 'border-box' }}
             />
           </div>
 
@@ -237,7 +265,6 @@ export default function Auth() {
         .order('name')
       if (data) {
         setRegions(data)
-        // Auto-select first active region (Abia)
         const firstActive = data.find(r => r.is_active)
         if (firstActive) {
           setSelectedRegion(firstActive)
@@ -249,14 +276,13 @@ export default function Auth() {
     fetchRegions()
   }, [])
 
-  // Fetch pickup zones for selected region
   async function fetchZones(regionId) {
     const { data } = await supabase
       .from('pickup_zones')
       .select('id, name, city, landmark')
       .eq('region_id', regionId)
       .eq('active', true)
-      .order('name')
+      .order('city')
     if (data && data.length > 0) {
       setZones(data)
       setForm(prev => ({ ...prev, zoneId: data[0].id }))
@@ -273,14 +299,18 @@ export default function Auth() {
   function handleRegionChange(e) {
     const regionId = e.target.value
     const region = regions.find(r => r.id === regionId)
+
+    // Prevent selecting coming soon regions
+    if (region && !region.is_active) {
+      setSelectedRegion(region)
+      setForm(prev => ({ ...prev, regionId, zoneId: '' }))
+      setZones([])
+      return
+    }
+
     setSelectedRegion(region)
     setForm(prev => ({ ...prev, regionId, zoneId: '' }))
-
-    if (region?.is_active) {
-      fetchZones(regionId)
-    } else {
-      setZones([])
-    }
+    if (region?.is_active) fetchZones(regionId)
   }
 
   function validate() {
@@ -299,12 +329,10 @@ export default function Auth() {
   }
 
   async function handleSubmit() {
-    // If coming soon state selected — show waitlist instead
     if (mode === 'signup' && selectedRegion && !selectedRegion.is_active) {
       setShowWaitlist(true)
       return
     }
-
     if (!validate()) return
     setLoading(true)
     try {
@@ -338,7 +366,6 @@ export default function Auth() {
     setLoading(false)
   }
 
-  // Show waitlist screen for coming soon states
   if (showWaitlist && selectedRegion) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--cream)' }}>
@@ -363,7 +390,6 @@ export default function Auth() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--cream)', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Green header */}
       <div style={{ background: 'var(--green)', padding: '20px 20px 48px' }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green-muted)', fontSize: 14, marginBottom: 28 }}>
           <ArrowLeft size={16} /> Back
@@ -390,11 +416,9 @@ export default function Auth() {
         </p>
       </div>
 
-      {/* Form card */}
       <div style={{ flex: 1, padding: '0 16px', marginTop: -24 }}>
         <div className="card" style={{ padding: '28px 24px', maxWidth: 420, margin: '0 auto' }}>
 
-          {/* Tab switcher */}
           <div style={{ display: 'flex', background: 'var(--cream-dark)', borderRadius: 10, padding: 4, marginBottom: 28 }}>
             {['login', 'signup'].map(m => (
               <button key={m} onClick={() => setMode(m)} style={{
@@ -410,7 +434,7 @@ export default function Auth() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-            {/* Full name — signup only */}
+            {/* Full name */}
             {mode === 'signup' && (
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>Full Name *</label>
@@ -424,7 +448,7 @@ export default function Auth() {
               </div>
             )}
 
-            {/* Email — both modes */}
+            {/* Email */}
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>Email Address *</label>
               <input
@@ -437,7 +461,7 @@ export default function Auth() {
               />
             </div>
 
-            {/* WhatsApp — signup only */}
+            {/* WhatsApp */}
             {mode === 'signup' && (
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>
@@ -458,23 +482,50 @@ export default function Auth() {
               </div>
             )}
 
-            {/* State selector — signup only */}
+            {/* State selector */}
             {mode === 'signup' && (
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>Your State *</label>
                 {regions.length > 0 ? (
-                  <select
-                    name="regionId"
-                    value={form.regionId}
-                    onChange={handleRegionChange}
-                    style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1.5px solid var(--cream-dark)', fontSize: 14, outline: 'none', background: 'white', color: 'var(--charcoal)', boxSizing: 'border-box' }}
-                  >
-                    {regions.map(r => (
-                      <option key={r.id} value={r.id}>
-                        {r.name} {r.is_active ? '✅' : '— Coming Soon'}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <select
+                      name="regionId"
+                      value={form.regionId}
+                      onChange={handleRegionChange}
+                      style={{
+                        width: '100%', padding: '12px', borderRadius: 8,
+                        border: '1.5px solid var(--cream-dark)', fontSize: 14,
+                        outline: 'none', background: 'white',
+                        color: 'var(--charcoal)', boxSizing: 'border-box',
+                        appearance: 'none',
+                      }}
+                    >
+                      {/* Active regions first */}
+                      <optgroup label="Available Now">
+                        {regions.filter(r => r.is_active).map(r => (
+                          <option key={r.id} value={r.id}>
+                            ✅ {r.name}
+                          </option>
+                        ))}
+                      </optgroup>
+
+                      {/* Coming soon — visually separated */}
+                      <optgroup label="Coming Soon">
+                        {regions.filter(r => !r.is_active).map(r => (
+                          <option
+                            key={r.id}
+                            value={r.id}
+                            style={{ color: '#bbb' }}
+                          >
+                            🌙 {r.name} — Coming Soon
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+
+                    {/* Custom dropdown arrow */}
+                    <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#aaa', fontSize: 12 }}>▾</div>
+                  </div>
                 ) : (
                   <div style={{ padding: '12px', borderRadius: 8, border: '1.5px solid var(--cream-dark)', background: 'var(--cream)', fontSize: 13, color: '#888' }}>
                     Loading states...
@@ -488,14 +539,14 @@ export default function Auth() {
                       🌙 Not yet available in {selectedRegion.name}
                     </div>
                     <div style={{ fontSize: 11, color: '#8B6914' }}>
-                      Tap "Create Account" to join the waitlist and be notified when we launch there.
+                      Tap "Join Waitlist" and we'll WhatsApp you when we launch there.
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* City — signup only, only shown for active regions */}
+            {/* City — only for active regions */}
             {mode === 'signup' && selectedRegion?.is_active && (
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>Your City *</label>
@@ -520,7 +571,7 @@ export default function Auth() {
               </div>
             )}
 
-            {/* Password — both modes */}
+            {/* Password with real-time strength indicator */}
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>Password *</label>
               <div style={{ position: 'relative' }}>
@@ -531,15 +582,31 @@ export default function Auth() {
                   value={form.password}
                   onChange={handleChange}
                   onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                  style={{ width: '100%', padding: '12px 40px 12px 12px', borderRadius: 8, border: '1.5px solid var(--cream-dark)', fontSize: 14, outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                  style={{
+                    width: '100%', padding: '12px 40px 12px 12px',
+                    borderRadius: 8,
+                    border: `1.5px solid ${
+                      mode === 'signup' && form.password.length > 0
+                        ? form.password.length >= 6
+                          ? '#22c55e'
+                          : 'var(--orange)'
+                        : 'var(--cream-dark)'
+                    }`,
+                    fontSize: 14, outline: 'none', background: 'white',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.2s',
+                  }}
                 />
                 <button
                   onClick={() => setShowPw(!showPw)}
-                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#aaa', cursor: 'pointer' }}
+                  style={{ position: 'absolute', right: 12, top: showPw || form.password.length === 0 ? '50%' : '30%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#aaa', cursor: 'pointer' }}
                 >
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+
+              {/* Real-time strength indicator — signup only */}
+              {mode === 'signup' && <PasswordStrength password={form.password} />}
             </div>
 
             {/* Submit */}
@@ -551,7 +618,7 @@ export default function Auth() {
             >
               {loading ? 'Please wait...' :
                 mode === 'login' ? 'Sign In' :
-                selectedRegion && !selectedRegion.is_active ? 'Join Waitlist →' :
+                selectedRegion && !selectedRegion.is_active ? '🔔 Join Waitlist' :
                 'Create Account'}
             </button>
           </div>
