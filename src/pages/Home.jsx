@@ -61,7 +61,6 @@ export default function Home() {
 
   const currentSeasonal = SEASONAL_INTEL.filter(i => i.months.includes(currentMonth))
 
-  // Hero CTA label based on ordering state
   function getHeroCTA() {
     if (orderingState === 'same_day') return { label: 'Shop Market Now', icon: <ShoppingBasket size={20} /> }
     if (orderingState === 'preorder') return { label: 'Pre-order Now', icon: <ShoppingBasket size={20} /> }
@@ -70,7 +69,6 @@ export default function Home() {
 
   const heroCTA = getHeroCTA()
 
-  // Hero subtitle — dynamic, no hardcoded location
   function getHeroSubtitle() {
     if (todayMarket && orderOpen) return `${todayMarket.name.toUpperCase()} IS LIVE TODAY`
     if (todayMarket && !orderOpen) return `${todayMarket.name.toUpperCase()} • ORDERS CLOSED`
@@ -85,7 +83,7 @@ export default function Home() {
       <Navbar />
       <CountdownBanner />
 
-      {/* Pre-order banner — shows day before market from noon */}
+      {/* Pre-order banner */}
       {preorderOpen && tomorrowMarket && !orderOpen && (
         <div style={{
           background: 'linear-gradient(90deg, #2D6A4F, var(--green))',
@@ -115,7 +113,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Listings live banner — shows from noon day before, before pre-order */}
+      {/* Listings live banner */}
       {listingVisible && !preorderOpen && !todayMarket && tomorrowMarket && currentHour >= TIMING.LISTING_OPEN_HOUR && (
         <div style={{
           background: 'rgba(27,67,50,0.08)',
@@ -132,7 +130,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Rest day banner — quiet, not blocking */}
+      {/* Rest day banner */}
       {!listingVisible && !todayMarket && (
         <div style={{
           background: 'var(--charcoal)',
@@ -163,20 +161,30 @@ export default function Home() {
         position: 'relative',
         overflow: 'hidden',
       }}>
-        <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
-        <div style={{ position: 'relative', maxWidth: 480, margin: '0 auto' }}>
+        <div style={{
+          position: 'absolute', top: -40, right: -40,
+          width: 200, height: 200, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.04)',
+        }} />
 
-          {/* Dynamic subtitle — no hardcoded location */}
-          <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 12 }}>
+        <div style={{ position: 'relative', maxWidth: 480, margin: '0 auto' }}>
+          {/* Dynamic subtitle */}
+          <div style={{
+            color: 'var(--green-muted)',
+            fontSize: 12, fontWeight: 600,
+            letterSpacing: 2, marginBottom: 12,
+          }}>
             {getHeroSubtitle()}
           </div>
 
+          {/* ✅ FIX 1 — lineHeight increased from 1.1 to 1.25 */}
+          {/* This prevents "village." descender overlapping "Only" */}
           <h1 style={{
             fontFamily: 'Playfair Display, serif',
             color: 'white',
             fontSize: 'clamp(32px, 8vw, 52px)',
             fontWeight: 900,
-            lineHeight: 1.1,
+            lineHeight: 1.25,
             marginBottom: 16,
           }}>
             Fresh from the<br />
@@ -184,8 +192,11 @@ export default function Home() {
             Only on market days.
           </h1>
 
-          {/* Scalable body copy — no state name */}
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, lineHeight: 1.6, marginBottom: 28, maxWidth: 380 }}>
+          <p style={{
+            color: 'rgba(255,255,255,0.8)',
+            fontSize: 16, lineHeight: 1.6,
+            marginBottom: 28, maxWidth: 380,
+          }}>
             Fresh farm produce from traditional village markets — delivered directly to city buyers. No middlemen. No markup. Just fresh.
           </p>
 
@@ -216,7 +227,10 @@ export default function Home() {
               { icon: '🚐', text: 'Delivered to your city' },
               { icon: '📦', text: 'Food grade packaging' },
             ].map(({ icon, text }) => (
-              <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>
+              <div key={text} style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                color: 'rgba(255,255,255,0.7)', fontSize: 13,
+              }}>
                 <span>{icon}</span><span>{text}</span>
               </div>
             ))}
@@ -234,7 +248,11 @@ export default function Home() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
           }}>
             <div>
-              <div style={{ fontSize: 12, color: orderingState === 'same_day' ? 'var(--orange)' : 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>
+              <div style={{
+                fontSize: 12,
+                color: orderingState === 'same_day' ? 'var(--orange)' : 'var(--gold)',
+                fontWeight: 600, marginBottom: 4,
+              }}>
                 {orderingState === 'same_day' ? '🌿 OPEN NOW' : '🌅 PRE-ORDER OPEN'}
               </div>
               <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700 }}>
@@ -252,19 +270,59 @@ export default function Home() {
         </div>
       )}
 
-      {/* Categories */}
+      {/* ✅ FIX 2 — Categories grid with fixed emoji height for baseline alignment */}
       <div style={{ padding: '36px 16px 0' }}>
-        <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
+        <h2 style={{
+          fontFamily: 'Playfair Display, serif',
+          fontSize: 24, fontWeight: 700, marginBottom: 16,
+        }}>
           What we carry
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 10 }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))',
+          gap: 10,
+        }}>
           {CATEGORIES.map(cat => (
-            <Link key={cat.slug} to={`/market?category=${cat.slug}`} style={{
-              background: 'white', borderRadius: 12, padding: '16px 8px',
-              textAlign: 'center', boxShadow: 'var(--shadow)', display: 'block',
-            }}>
-              <div style={{ fontSize: 28, marginBottom: 6 }}>{cat.emoji}</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--charcoal)' }}>{cat.name}</div>
+            <Link
+              key={cat.slug}
+              to={`/market?category=${cat.slug}`}
+              style={{
+                background: 'white',
+                borderRadius: 12,
+                padding: '14px 6px 12px',
+                textAlign: 'center',
+                boxShadow: 'var(--shadow)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0,
+                textDecoration: 'none',
+                transition: 'transform 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+            >
+              {/* Fixed height forces all emojis to same baseline */}
+              <div style={{
+                height: 36,
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 6,
+              }}>
+                <span style={{ fontSize: 26, lineHeight: 1 }}>{cat.emoji}</span>
+              </div>
+              <span style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: 'var(--charcoal)',
+                lineHeight: 1.3,
+                display: 'block',
+              }}>
+                {cat.name}
+              </span>
             </Link>
           ))}
         </div>
@@ -302,7 +360,10 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <div style={{ background: 'rgba(27,67,50,0.08)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                <div style={{
+                  background: 'rgba(27,67,50,0.08)',
+                  borderRadius: 8, padding: '8px 12px', textAlign: 'center',
+                }}>
                   <div style={{ fontSize: 11, color: '#888' }}>You save</div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--green)' }}>{item.save}</div>
                 </div>
@@ -319,20 +380,51 @@ export default function Home() {
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {[
-            { step: '01', title: 'Browse from noon, day before', desc: 'Listings go live at 12PM the day before market. Pre-order that evening for guaranteed first pick at 5AM.', icon: '📱' },
-            { step: '02', title: 'We shop for you', desc: 'Our market agent buys your items fresh from village sellers early morning before the market fills up.', icon: '🛒' },
-            { step: '03', title: 'Packaged clean', desc: 'Every item is sorted, prepped and packed in food-grade transparent bags. Meat processed fresh on market morning.', icon: '📦' },
-            { step: '04', title: 'Collect in your city', desc: 'Pick up from 3PM or Umuahia from 12:30PM. Or pay a keke rider for door delivery.', icon: '🚐' },
+            {
+              step: '01',
+              title: 'Browse from noon, day before',
+              desc: 'Listings go live at 12PM the day before market. Pre-order that evening for guaranteed first pick at 5AM.',
+              icon: '📱',
+            },
+            {
+              step: '02',
+              title: 'We shop for you',
+              desc: 'Our market agent buys your items fresh from village sellers early morning before the market fills up.',
+              icon: '🛒',
+            },
+            {
+              step: '03',
+              title: 'Packaged clean',
+              desc: 'Every item is sorted, prepped and packed in food-grade transparent bags. Meat processed fresh on market morning.',
+              icon: '📦',
+            },
+            {
+              step: '04',
+              title: 'Collect in your city',
+              desc: 'Pick up in Aba from 3PM or Umuahia from 12:30PM. Or pay a keke rider for door delivery.',
+              icon: '🚐',
+            },
           ].map(({ step, title, desc, icon }, i) => (
             <div key={step} style={{ display: 'flex', gap: 16, position: 'relative' }}>
               {i < 3 && (
-                <div style={{ position: 'absolute', left: 20, top: 52, bottom: 0, width: 2, background: 'linear-gradient(to bottom, var(--green-muted), transparent)' }} />
+                <div style={{
+                  position: 'absolute', left: 20, top: 52, bottom: 0,
+                  width: 2,
+                  background: 'linear-gradient(to bottom, var(--green-muted), transparent)',
+                }} />
               )}
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, zIndex: 1 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%',
+                background: 'var(--green)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 18, flexShrink: 0, zIndex: 1,
+              }}>
                 {icon}
               </div>
               <div style={{ paddingBottom: 28 }}>
-                <div style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: 'var(--green)', marginBottom: 4 }}>{step}</div>
+                <div style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: 'var(--green)', marginBottom: 4 }}>
+                  {step}
+                </div>
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{title}</div>
                 <div style={{ fontSize: 14, color: '#666', lineHeight: 1.5 }}>{desc}</div>
               </div>
@@ -343,11 +435,20 @@ export default function Home() {
 
       {/* Next market preview */}
       <div style={{ padding: '36px 16px 40px' }}>
-        <div style={{ background: 'var(--green)', borderRadius: 16, padding: '24px', textAlign: 'center' }}>
-          <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>
+        <div style={{
+          background: 'var(--green)', borderRadius: 16,
+          padding: '24px', textAlign: 'center',
+        }}>
+          <div style={{
+            color: 'var(--green-muted)', fontSize: 12,
+            fontWeight: 600, letterSpacing: 2, marginBottom: 8,
+          }}>
             COMING UP
           </div>
-          <h3 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 28, fontWeight: 700, marginBottom: 4 }}>
+          <h3 style={{
+            fontFamily: 'Playfair Display, serif', color: 'white',
+            fontSize: 28, fontWeight: 700, marginBottom: 4,
+          }}>
             {nextMarket.name}
           </h3>
           <div style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 6 }}>
@@ -358,7 +459,10 @@ export default function Home() {
           </div>
           <button
             className="btn-secondary"
-            style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', margin: '0 auto', display: 'flex' }}
+            style={{
+              borderColor: 'rgba(255,255,255,0.3)',
+              color: 'white', margin: '0 auto', display: 'flex',
+            }}
             onClick={() => setShowPopup(true)}
           >
             <Bell size={16} />
