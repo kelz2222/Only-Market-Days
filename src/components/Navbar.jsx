@@ -35,16 +35,14 @@ export default function Navbar() {
               fontWeight: 700,
             }}>
               Only Market Days
-            </div>
             <div style={{
-              color: 'var(--green-muted)',
-              fontSize: 9,
-              letterSpacing: 0.8,
-              whiteSpace: 'nowrap',
-            }}>
-              ISIALA NGWA NORTH • ABIA STATE
-            </div>
-          </div>
+  color: 'var(--green-muted)',
+  fontSize: 9,
+  letterSpacing: 0.8,
+  whiteSpace: 'nowrap',
+}}>
+  FRESH VILLAGE PRODUCE • DELIVERED TO YOUR CITY
+</div>
         </Link>
 
         {/* Right side */}
