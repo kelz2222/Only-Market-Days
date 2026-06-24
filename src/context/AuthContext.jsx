@@ -3,10 +3,6 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext({})
 
-function phoneToEmail(phone) {
-  return `${phone.replace(/\D/g, '')}@onlymarketdays.app`
-}
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
@@ -39,7 +35,6 @@ export function AuthProvider({ children }) {
   }
 
   async function signUp({ email, password, fullName, whatsapp, zoneId }) {
-    // email here is already the phone-derived internal email
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
 
@@ -54,7 +49,6 @@ export function AuthProvider({ children }) {
   }
 
   async function signIn({ email, password }) {
-    // email here is already the phone-derived internal email
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     return data
