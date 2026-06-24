@@ -75,17 +75,6 @@ function SpinningMark({ size = 52, isMarketDay = false }) {
   )
 }
 
-// Clean phone number — strip spaces and dashes
-function cleanPhone(phone) {
-  return phone.replace(/\D/g, '')
-}
-
-// Generate internal email from phone number
-// Buyer never sees this — it's just for Supabase Auth
-function phoneToEmail(phone) {
-  return `${cleanPhone(phone)}@onlymarketdays.app`
-}
-
 export default function Auth() {
   const [mode, setMode] = useState('login')
   const [showPw, setShowPw] = useState(false)
@@ -97,6 +86,7 @@ export default function Auth() {
 
   const [form, setForm] = useState({
     fullName: '',
+    email: '',
     whatsapp: '',
     password: '',
     zoneId: ZONES[0].id,
@@ -107,14 +97,14 @@ export default function Auth() {
   }
 
   function validate() {
-    const phone = cleanPhone(form.whatsapp)
     if (mode === 'signup') {
       if (!form.fullName.trim()) { toast.error('Please enter your full name'); return false }
-      if (phone.length < 10) { toast.error('Please enter a valid phone number'); return false }
+      if (!form.email.includes('@')) { toast.error('Please enter a valid email'); return false }
+      if (form.whatsapp.replace(/\D/g, '').length < 10) { toast.error('Please enter a valid WhatsApp number'); return false }
       if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return false }
     }
     if (mode === 'login') {
-      if (phone.length < 10) { toast.error('Please enter your WhatsApp number'); return false }
+      if (!form.email.includes('@')) { toast.error('Please enter your email'); return false }
       if (!form.password) { toast.error('Please enter your password'); return false }
     }
     return true
@@ -123,34 +113,29 @@ export default function Auth() {
   async function handleSubmit() {
     if (!validate()) return
     setLoading(true)
-
-    // Convert phone to internal email for Supabase
-    const internalEmail = phoneToEmail(form.whatsapp)
-
     try {
       if (mode === 'login') {
-        await signIn({ email: internalEmail, password: form.password })
+        await signIn({ email: form.email, password: form.password })
         toast.success('Welcome back!')
         navigate('/')
       } else {
         await signUp({
-          email: internalEmail,
+          email: form.email,
           password: form.password,
           fullName: form.fullName,
-          whatsapp: cleanPhone(form.whatsapp),
+          whatsapp: form.whatsapp.replace(/\D/g, ''),
           zoneId: form.zoneId,
         })
         toast.success('Account created! Welcome to Only Market Days.')
         navigate('/')
       }
     } catch (err) {
-      // Give user-friendly error messages
       const msg = err.message || ''
       if (msg.includes('already registered')) {
-        toast.error('This number already has an account. Please sign in.')
+        toast.error('This email already has an account. Please sign in.')
         setMode('login')
       } else if (msg.includes('Invalid login')) {
-        toast.error('Wrong phone number or password')
+        toast.error('Wrong email or password')
       } else {
         toast.error(msg || 'Something went wrong. Try again.')
       }
@@ -229,7 +214,7 @@ export default function Auth() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-            {/* SIGNUP ONLY fields */}
+            {/* Full name — signup only */}
             {mode === 'signup' && (
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>
@@ -249,37 +234,53 @@ export default function Auth() {
               </div>
             )}
 
-            {/* WhatsApp number — both modes */}
+            {/* Email — both modes */}
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>
-                WhatsApp Number *
+                Email Address *
               </label>
-              <div style={{ position: 'relative' }}>
-                <Phone size={15} style={{
-                  position: 'absolute', left: 12, top: '50%',
-                  transform: 'translateY(-50%)', color: '#aaa',
-                }} />
-                <input
-                  name="whatsapp"
-                  type="tel"
-                  placeholder="08012345678"
-                  value={form.whatsapp}
-                  onChange={handleChange}
-                  style={{
-                    width: '100%', padding: '12px 12px 12px 36px',
-                    borderRadius: 8, border: '1.5px solid var(--cream-dark)',
-                    fontSize: 15, outline: 'none', background: 'white',
-                    boxSizing: 'border-box', fontFamily: 'DM Mono, monospace',
-                    letterSpacing: 1,
-                  }}
-                />
-              </div>
-              {mode === 'login' && (
-                <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
-                  Use the number you signed up with
-                </div>
-              )}
+              <input
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={handleChange}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: 8,
+                  border: '1.5px solid var(--cream-dark)', fontSize: 14,
+                  outline: 'none', background: 'white', boxSizing: 'border-box',
+                }}
+              />
             </div>
+
+            {/* WhatsApp — signup only */}
+            {mode === 'signup' && (
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>
+                  WhatsApp Number * <span style={{ fontWeight: 400, color: '#aaa' }}>(for order updates)</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Phone size={15} style={{
+                    position: 'absolute', left: 12, top: '50%',
+                    transform: 'translateY(-50%)', color: '#aaa',
+                  }} />
+                  <input
+                    name="whatsapp"
+                    type="tel"
+                    placeholder="08012345678"
+                    value={form.whatsapp}
+                    onChange={handleChange}
+                    style={{
+                      width: '100%', padding: '12px 12px 12px 36px',
+                      borderRadius: 8, border: '1.5px solid var(--cream-dark)',
+                      fontSize: 15, outline: 'none', background: 'white',
+                      boxSizing: 'border-box', fontFamily: 'DM Mono, monospace',
+                      letterSpacing: 1,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* City — signup only */}
             {mode === 'signup' && (
@@ -351,20 +352,16 @@ export default function Auth() {
                 opacity: loading ? 0.7 : 1,
               }}
             >
-              {loading
-                ? 'Please wait...'
-                : mode === 'login' ? 'Sign In' : 'Create Account'}
+              {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           </div>
 
-          {/* Signup note */}
           {mode === 'signup' && (
             <p style={{ fontSize: 12, color: '#888', textAlign: 'center', marginTop: 16, lineHeight: 1.6 }}>
-              Your WhatsApp number is your login. You'll receive order updates on this number.
+              You'll receive order updates on your WhatsApp number.
             </p>
           )}
 
-          {/* Forgot password hint */}
           {mode === 'login' && (
             <p style={{ fontSize: 12, color: '#888', textAlign: 'center', marginTop: 16 }}>
               Forgot your password? Contact us on WhatsApp for a reset.
