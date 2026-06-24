@@ -25,9 +25,8 @@ export default function Navbar() {
         zIndex: 100,
         boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
       }}>
-
         {/* Logo */}
-        <Link to="/" style={{ textDecoration: 'none' }}>
+        <Link to="/">
           <OnlyMarketDaysNavLogo />
         </Link>
 
