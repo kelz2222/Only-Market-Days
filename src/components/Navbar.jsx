@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { ShoppingBasket, User, Home, Store } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
+import OnlyMarketDaysNavLogo from './OnlyMarketDaysNavLogo'
 
 export default function Navbar() {
   const { cartCount } = useCart()
@@ -24,25 +25,10 @@ export default function Navbar() {
         zIndex: 100,
         boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
       }}>
+
         {/* Logo */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 20 }}>🌿</span>
-          <div style={{ lineHeight: 1.1 }}>
-            <div style={{
-              fontFamily: 'Playfair Display, serif',
-              color: 'var(--cream)',
-              fontSize: 15,
-              fontWeight: 700,
-            }}>
-              Only Market Days
-            <div style={{
-  color: 'var(--green-muted)',
-  fontSize: 9,
-  letterSpacing: 0.8,
-  whiteSpace: 'nowrap',
-}}>
-  FRESH VILLAGE PRODUCE • DELIVERED TO YOUR CITY
-</div>
+        <Link to="/" style={{ textDecoration: 'none' }}>
+          <OnlyMarketDaysNavLogo />
         </Link>
 
         {/* Right side */}
