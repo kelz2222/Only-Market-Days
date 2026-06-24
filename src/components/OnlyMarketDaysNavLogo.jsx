@@ -26,6 +26,7 @@ export default function OnlyMarketDaysNavLogo() {
         }
       `}</style>
 
+      {/* Spinning mark */}
       <svg
         width="40"
         height="40"
@@ -73,10 +74,30 @@ export default function OnlyMarketDaysNavLogo() {
         </g>
       </svg>
 
-      <div style={{ lineHeight: 1, userSelect: 'none' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Georgia, serif', color: '#1B4332', letterSpacing: 1 }}>ONLY</div>
-        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Georgia, serif', color: '#C0522B', letterSpacing: 0.5, marginTop: -1 }}>MARKET</div>
-        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Georgia, serif', color: '#9B7E46', letterSpacing: 1, marginTop: -1 }}>DAYS</div>
+      {/* Wordmark — single line, fully visible in 56px navbar */}
+      <div style={{ userSelect: 'none' }}>
+        <div style={{
+          fontFamily: 'Georgia, serif',
+          fontWeight: 700,
+          fontSize: 13,
+          letterSpacing: 0.5,
+          whiteSpace: 'nowrap',
+          lineHeight: 1.2,
+        }}>
+          <span style={{ color: '#FFFFFF' }}>ONLY </span>
+          <span style={{ color: '#C0522B' }}>MARKET </span>
+          <span style={{ color: '#F7B731' }}>DAYS</span>
+        </div>
+        <div style={{
+          fontSize: 7.5,
+          color: 'rgba(255,255,255,0.45)',
+          letterSpacing: 1.5,
+          fontFamily: 'sans-serif',
+          whiteSpace: 'nowrap',
+          marginTop: 2,
+        }}>
+          EKE · ORIE · AFỌ · NKWỌ
+        </div>
       </div>
 
     </div>
