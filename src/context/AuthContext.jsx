@@ -34,19 +34,20 @@ export function AuthProvider({ children }) {
     setLoading(false)
   }
 
-  async function signUp({ email, password, fullName, whatsapp, zoneId }) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) throw error
+  async function signUp({ email, password, fullName, whatsapp, zoneId, regionId }) {
+  const { data, error } = await supabase.auth.signUp({ email, password })
+  if (error) throw error
 
-    const { error: profileError } = await supabase.from('buyer_profiles').insert({
-      id: data.user.id,
-      full_name: fullName,
-      whatsapp: whatsapp,
-      preferred_zone_id: zoneId || null,
-    })
-    if (profileError) throw profileError
-    return data
-  }
+  const { error: profileError } = await supabase.from('buyer_profiles').insert({
+    id: data.user.id,
+    full_name: fullName,
+    whatsapp: whatsapp,
+    preferred_zone_id: zoneId || null,
+    region_id: regionId || null,
+  })
+  if (profileError) throw profileError
+  return data
+}
 
   async function signIn({ email, password }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
