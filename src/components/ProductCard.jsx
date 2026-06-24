@@ -3,7 +3,6 @@ import { useCart } from '../context/CartContext'
 import { formatNaira } from '../lib/paystack'
 import toast from 'react-hot-toast'
 
-// Match emoji to category correctly
 const CATEGORY_EMOJI = {
   vegetables: '🌿',
   staples: '🌾',
@@ -17,41 +16,58 @@ const CATEGORY_EMOJI = {
   grains: '🌽',
 }
 
-// Meat products get different subtitle
 const MEAT_SLUGS = ['meat']
 
-export default function ProductCard({ product, unavailableToday = false, onHighValueClick }) {
+export default function ProductCard({ product, unavailableToday = false, orderingState = 'browse_only', onMeatOptionsClick }) {
   const { addToCart, cartItems } = useCart()
   const inCart = cartItems.find(i => i.id === product.id)
   const isSoldOut = product.quantity_available <= 0
   const isMeat = product.is_meat || MEAT_SLUGS.includes(product.category_slug)
   const isHighValue = product.is_high_value
-  const isDisabled = isSoldOut || unavailableToday
-
-  // Subtitle under market name
+  const isDisabled = isSoldOut || unavailableToday || orderingState === 'browse_only'
   const freshLabel = isMeat ? 'Processed fresh this morning' : 'Harvested this morning'
-
-  // Correct placeholder emoji
   const placeholderEmoji = CATEGORY_EMOJI[product.category_slug] || '🌿'
 
   function handleAdd() {
     if (isDisabled) return
-    if (isHighValue) {
-      onHighValueClick && onHighValueClick(product)
+    if (isHighValue || isMeat) {
+      onMeatOptionsClick && onMeatOptionsClick(product)
       return
     }
     addToCart(product)
     toast.success(`${product.name} added to basket`)
   }
 
+  // Button label
+  function getButtonLabel() {
+    if (unavailableToday) return 'Other market'
+    if (isSoldOut) return 'Sold out'
+    if (orderingState === 'browse_only') return 'Not open yet'
+    if (isHighValue || isMeat) return '⚙️ Options'
+    if (inCart) return `In basket (${inCart.qty})`
+    if (orderingState === 'preorder') return 'Pre-order'
+    return 'Add'
+  }
+
+  // Button color
+  function getButtonColor() {
+    if (isDisabled) return '#ccc'
+    if (isHighValue || isMeat) return 'var(--charcoal)'
+    if (inCart) return 'var(--green)'
+    if (orderingState === 'preorder') return '#2D6A4F'
+    return 'var(--orange)'
+  }
+
   return (
-    <div className="card" style={{
-      display: 'flex', flexDirection: 'column',
-      transition: 'transform 0.2s, box-shadow 0.2s',
-      cursor: isDisabled ? 'not-allowed' : 'pointer',
-      opacity: unavailableToday ? 0.45 : 1,
-      filter: unavailableToday ? 'grayscale(60%)' : 'none',
-    }}
+    <div
+      className="card"
+      style={{
+        display: 'flex', flexDirection: 'column',
+        transition: 'transform 0.2s',
+        cursor: isDisabled ? 'default' : 'pointer',
+        opacity: unavailableToday ? 0.45 : 1,
+        filter: unavailableToday ? 'grayscale(60%)' : 'none',
+      }}
       onMouseEnter={e => !isDisabled && (e.currentTarget.style.transform = 'translateY(-3px)')}
       onMouseLeave={e => e.currentTarget.style.transform = 'none'}
     >
@@ -88,9 +104,9 @@ export default function ProductCard({ product, unavailableToday = false, onHighV
           </div>
         )}
         {unavailableToday && !isSoldOut && (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: 'white', fontWeight: 700, fontSize: 11, letterSpacing: 1, textAlign: 'center', padding: '0 8px' }}>
-              Available on {product.market_name} day
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
+            <span style={{ color: 'white', fontWeight: 700, fontSize: 11, textAlign: 'center' }}>
+              {product.market_name} day only
             </span>
           </div>
         )}
@@ -98,7 +114,6 @@ export default function ProductCard({ product, unavailableToday = false, onHighV
 
       {/* Content */}
       <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
-        {/* Origin label */}
         <div style={{ fontSize: 10, color: 'var(--green)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
           {isMeat ? <Flame size={10} /> : <Leaf size={10} />}
           {product.market_name} • {freshLabel}
@@ -113,12 +128,12 @@ export default function ProductCard({ product, unavailableToday = false, onHighV
         )}
 
         {product.description && (
-          <p style={{ fontSize: 12, color: '#666', lineHeight: 1.4 }}>{product.description}</p>
+          <p style={{ fontSize: 11, color: '#666', lineHeight: 1.4 }}>{product.description}</p>
         )}
 
-        <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
           <div>
-            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, color: 'var(--green)' }}>
+            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 17, fontWeight: 700, color: 'var(--green)' }}>
               {formatNaira(product.price)}
             </div>
             <div style={{ fontSize: 10, color: '#888' }}>per {product.unit}</div>
@@ -128,23 +143,18 @@ export default function ProductCard({ product, unavailableToday = false, onHighV
             onClick={handleAdd}
             disabled={isDisabled}
             style={{
-              background: inCart ? 'var(--green)' : isHighValue ? 'var(--charcoal)' : 'var(--orange)',
+              background: getButtonColor(),
               color: 'white', border: 'none', borderRadius: 8,
-              padding: isHighValue ? '8px 10px' : '9px 14px',
-              display: 'flex', alignItems: 'center', gap: 5,
-              fontSize: isHighValue ? 11 : 12, fontWeight: 600,
+              padding: '8px 10px',
+              display: 'flex', alignItems: 'center', gap: 4,
+              fontSize: 11, fontWeight: 600,
               cursor: isDisabled ? 'not-allowed' : 'pointer',
               whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
-            {isHighValue ? (
-              '⚙️ Options'
-            ) : (
-              <>
-                <ShoppingBasket size={13} />
-                {inCart ? `(${inCart.qty})` : 'Add'}
-              </>
-            )}
+            {!isHighValue && !isMeat && !isDisabled && <ShoppingBasket size={12} />}
+            {getButtonLabel()}
           </button>
         </div>
       </div>
