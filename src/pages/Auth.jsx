@@ -1,14 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Eye, EyeOff, ArrowLeft, Phone } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { getTodaysMarket } from '../lib/marketCalendar'
+import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
-
-const ZONES = [
-  { id: 'aba-zone-id', name: 'Aba', landmark: 'Osisioma Junction' },
-  { id: 'umuahia-zone-id', name: 'Umuahia', landmark: 'Ubani Motor Park Area' },
-]
 
 function SpinningMark({ size = 52, isMarketDay = false }) {
   const spinDuration = isMarketDay ? '3s' : '8s'
@@ -79,9 +75,9 @@ export default function Auth() {
   const [mode, setMode] = useState('login')
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [zones, setZones] = useState([])
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
-
   const isMarketDay = !!getTodaysMarket(new Date())
 
   const [form, setForm] = useState({
@@ -89,8 +85,24 @@ export default function Auth() {
     email: '',
     whatsapp: '',
     password: '',
-    zoneId: ZONES[0].id,
+    zoneId: '',
   })
+
+  // Fetch real zone IDs from Supabase on mount
+  useEffect(() => {
+    async function fetchZones() {
+      const { data, error } = await supabase
+        .from('pickup_zones')
+        .select('id, name, city, landmark')
+        .eq('active', true)
+        .order('name')
+      if (!error && data && data.length > 0) {
+        setZones(data)
+        setForm(prev => ({ ...prev, zoneId: data[0].id }))
+      }
+    }
+    fetchZones()
+  }, [])
 
   function handleChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -98,14 +110,32 @@ export default function Auth() {
 
   function validate() {
     if (mode === 'signup') {
-      if (!form.fullName.trim()) { toast.error('Please enter your full name'); return false }
-      if (!form.email.includes('@')) { toast.error('Please enter a valid email'); return false }
-      if (form.whatsapp.replace(/\D/g, '').length < 10) { toast.error('Please enter a valid WhatsApp number'); return false }
-      if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return false }
+      if (!form.fullName.trim()) {
+        toast.error('Please enter your full name')
+        return false
+      }
+      if (!form.email.includes('@')) {
+        toast.error('Please enter a valid email address')
+        return false
+      }
+      if (form.whatsapp.replace(/\D/g, '').length < 10) {
+        toast.error('Please enter a valid WhatsApp number')
+        return false
+      }
+      if (form.password.length < 6) {
+        toast.error('Password must be at least 6 characters')
+        return false
+      }
     }
     if (mode === 'login') {
-      if (!form.email.includes('@')) { toast.error('Please enter your email'); return false }
-      if (!form.password) { toast.error('Please enter your password'); return false }
+      if (!form.email.includes('@')) {
+        toast.error('Please enter your email address')
+        return false
+      }
+      if (!form.password) {
+        toast.error('Please enter your password')
+        return false
+      }
     }
     return true
   }
@@ -124,7 +154,7 @@ export default function Auth() {
           password: form.password,
           fullName: form.fullName,
           whatsapp: form.whatsapp.replace(/\D/g, ''),
-          zoneId: form.zoneId,
+          zoneId: form.zoneId || null,
         })
         toast.success('Account created! Welcome to Only Market Days.')
         navigate('/')
@@ -155,7 +185,6 @@ export default function Auth() {
           <ArrowLeft size={16} /> Back
         </Link>
 
-        {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
           <SpinningMark size={56} isMarketDay={isMarketDay} />
           <div>
@@ -257,7 +286,10 @@ export default function Auth() {
             {mode === 'signup' && (
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>
-                  WhatsApp Number * <span style={{ fontWeight: 400, color: '#aaa' }}>(for order updates)</span>
+                  WhatsApp Number *
+                  <span style={{ fontWeight: 400, color: '#aaa', marginLeft: 4 }}>
+                    (for order updates)
+                  </span>
                 </label>
                 <div style={{ position: 'relative' }}>
                   <Phone size={15} style={{
@@ -282,29 +314,39 @@ export default function Auth() {
               </div>
             )}
 
-            {/* City — signup only */}
+            {/* City — signup only, fetched from Supabase */}
             {mode === 'signup' && (
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 6 }}>
                   Your City *
                 </label>
-                <select
-                  name="zoneId"
-                  value={form.zoneId}
-                  onChange={handleChange}
-                  style={{
-                    width: '100%', padding: '12px', borderRadius: 8,
-                    border: '1.5px solid var(--cream-dark)', fontSize: 14,
-                    outline: 'none', background: 'white',
-                    color: 'var(--charcoal)', boxSizing: 'border-box',
-                  }}
-                >
-                  {ZONES.map(z => (
-                    <option key={z.id} value={z.id}>
-                      {z.name} — {z.landmark}
-                    </option>
-                  ))}
-                </select>
+                {zones.length > 0 ? (
+                  <select
+                    name="zoneId"
+                    value={form.zoneId}
+                    onChange={handleChange}
+                    style={{
+                      width: '100%', padding: '12px', borderRadius: 8,
+                      border: '1.5px solid var(--cream-dark)', fontSize: 14,
+                      outline: 'none', background: 'white',
+                      color: 'var(--charcoal)', boxSizing: 'border-box',
+                    }}
+                  >
+                    {zones.map(z => (
+                      <option key={z.id} value={z.id}>
+                        {z.city} — {z.landmark}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div style={{
+                    padding: '12px', borderRadius: 8,
+                    border: '1.5px solid var(--cream-dark)',
+                    background: 'var(--cream)', fontSize: 13, color: '#888',
+                  }}>
+                    Loading cities...
+                  </div>
+                )}
               </div>
             )}
 
@@ -333,7 +375,8 @@ export default function Auth() {
                   style={{
                     position: 'absolute', right: 12, top: '50%',
                     transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', color: '#aaa', cursor: 'pointer',
+                    background: 'none', border: 'none',
+                    color: '#aaa', cursor: 'pointer',
                   }}
                 >
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -341,7 +384,7 @@ export default function Auth() {
               </div>
             </div>
 
-            {/* Submit */}
+            {/* Submit button */}
             <button
               onClick={handleSubmit}
               disabled={loading}
@@ -352,7 +395,9 @@ export default function Auth() {
                 opacity: loading ? 0.7 : 1,
               }}
             >
-              {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+              {loading
+                ? 'Please wait...'
+                : mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           </div>
 
