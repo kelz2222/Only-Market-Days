@@ -12,7 +12,7 @@ export const MARKETS = {
       'The women of Ntigha village woke up at dawn for this.',
       'Harvested yesterday. On your table today.',
       'What Aba market buys from. Now you can too.',
-      'No middleman. No markup. Just the farm.',
+      'No middlemen. No markup. Just the farm.',
       'Your grandmother knew this market. Now it comes to you.',
     ],
   },
@@ -32,10 +32,18 @@ export const MARKETS = {
 }
 
 export const TIMING = {
-  PREORDER_OPEN_HOUR: 18,
-  PREORDER_CLOSE_HOUR: 22,
+  // Day before market — listings go live and pre-orders open at noon
+  LISTING_OPEN_HOUR: 12,     // 12:00 PM day before
+
+  // Pre-order window: noon day before → 7AM market day
+  PREORDER_OPEN_HOUR: 12,    // noon day before
+  PREORDER_CLOSE_HOUR: 7,    // 7AM on market day (when same-day opens)
+
+  // Same-day order window: 7AM → 10AM on market day
   ORDER_OPEN_HOUR: 7,
   ORDER_CLOSE_HOUR: 10,
+
+  // Pickup times
   UMUAHIA_PICKUP_HOUR: 12,
   UMUAHIA_PICKUP_MIN: 30,
   ABA_PICKUP_HOUR: 15,
@@ -52,71 +60,54 @@ function daysDiff(a, b) {
   return Math.round((stripTime(a) - stripTime(b)) / (1000 * 60 * 60 * 24))
 }
 
-// Get the next future market date for a given anchor
-// Always returns a date >= today
 function getNextMarketDate(anchor, fromDate = new Date()) {
   const today = stripTime(fromDate)
   const anchorStripped = stripTime(anchor)
-  
-  // How many days since anchor
   const diffFromAnchor = Math.round((today - anchorStripped) / (1000 * 60 * 60 * 24))
-  
+
   if (diffFromAnchor < 0) {
-    // Anchor is in the future — return anchor itself
     return new Date(anchorStripped)
   }
-  
-  // How many full cycles have passed
+
   const cyclesPassed = Math.floor(diffFromAnchor / CYCLE_DAYS)
-  
-  // Most recent past market date
   const lastMarket = new Date(anchorStripped)
   lastMarket.setDate(lastMarket.getDate() + cyclesPassed * CYCLE_DAYS)
-  
-  // Next upcoming market date
   const nextMarket = new Date(lastMarket)
   nextMarket.setDate(nextMarket.getDate() + CYCLE_DAYS)
-  
-  // If today IS a market day, still return next one (today's market already handled separately)
+
   if (Math.round((today - stripTime(lastMarket)) / (1000 * 60 * 60 * 24)) === 0) {
     return nextMarket
   }
-  
+
   return nextMarket
 }
 
 // Returns which market is active TODAY (if any)
 export function getTodaysMarket(now = new Date()) {
   const today = stripTime(now)
-  
   for (const market of Object.values(MARKETS)) {
     const anchorStripped = stripTime(market.anchor)
     const diff = Math.round((today - anchorStripped) / (1000 * 60 * 60 * 24))
-    
-    // Today is a market day if diff is a non-negative multiple of CYCLE_DAYS
-    if (diff >= 0 && diff % CYCLE_DAYS === 0) {
-      return market
-    }
-    
-    // Also handle if anchor is today or in future (diff negative but zero mod)
-    if (diff === 0) {
-      return market
-    }
+    if (diff >= 0 && diff % CYCLE_DAYS === 0) return market
+    if (diff === 0) return market
   }
   return null
 }
 
-// Returns the next upcoming market and its date
-// Never returns today — always the NEXT one coming
+// Returns which market day is TOMORROW (if any)
+export function getTomorrowsMarket(now = new Date()) {
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  return getTodaysMarket(tomorrow)
+}
+
+// Returns the next upcoming market and date
 export function getNextMarket(now = new Date()) {
-  const today = stripTime(now)
-  
   const ntighaNext = getNextMarketDate(ORIE_NTIGHA_ANCHOR, now)
   const ukwuNext   = getNextMarketDate(ORIE_UKWU_ANCHOR, now)
-  
   const ntighaStripped = stripTime(ntighaNext)
   const ukwuStripped   = stripTime(ukwuNext)
-  
+
   if (ntighaStripped <= ukwuStripped) {
     return { market: MARKETS.NTIGHA, date: ntighaNext }
   } else {
@@ -124,20 +115,64 @@ export function getNextMarket(now = new Date()) {
   }
 }
 
-export function isPreorderOpen(now = new Date()) {
-  const tomorrow = new Date(now)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const tomorrowMarket = getTodaysMarket(tomorrow)
-  if (!tomorrowMarket) return false
+// LISTING WINDOW
+// Listings are visible from 12PM the day before market
+// through the end of market day
+export function isListingVisible(now = new Date()) {
   const hour = now.getHours()
-  return hour >= TIMING.PREORDER_OPEN_HOUR && hour < TIMING.PREORDER_CLOSE_HOUR
+  const todayMarket = getTodaysMarket(now)
+  const tomorrowMarket = getTomorrowsMarket(now)
+
+  // It's market day — listings always visible
+  if (todayMarket) return true
+
+  // It's the day before a market and it's past noon — listings visible
+  if (tomorrowMarket && hour >= TIMING.LISTING_OPEN_HOUR) return true
+
+  return false
 }
 
+// PRE-ORDER WINDOW
+// Open from 12PM day before until 7AM market morning
+export function isPreorderOpen(now = new Date()) {
+  const hour = now.getHours()
+  const todayMarket = getTodaysMarket(now)
+  const tomorrowMarket = getTomorrowsMarket(now)
+
+  // If today is market day and before 7AM — still pre-order window
+  if (todayMarket && hour < TIMING.ORDER_OPEN_HOUR) return true
+
+  // Day before market, after noon
+  if (tomorrowMarket && hour >= TIMING.PREORDER_OPEN_HOUR) return true
+
+  return false
+}
+
+// SAME-DAY ORDER WINDOW
+// Only 7AM–10AM on market day
 export function isOrderOpen(now = new Date()) {
   const todayMarket = getTodaysMarket(now)
   if (!todayMarket) return false
   const hour = now.getHours()
   return hour >= TIMING.ORDER_OPEN_HOUR && hour < TIMING.ORDER_CLOSE_HOUR
+}
+
+// What ordering state are we in?
+// Returns: 'same_day' | 'preorder' | 'browse_only'
+export function getOrderingState(now = new Date()) {
+  if (isOrderOpen(now)) return 'same_day'
+  if (isPreorderOpen(now)) return 'preorder'
+  return 'browse_only'
+}
+
+// Get the market these current listings belong to
+// (tomorrow's market if pre-order, today's if market day)
+export function getActiveListingMarket(now = new Date()) {
+  const todayMarket = getTodaysMarket(now)
+  if (todayMarket) return todayMarket
+  const tomorrowMarket = getTomorrowsMarket(now)
+  if (tomorrowMarket) return tomorrowMarket
+  return null
 }
 
 export function daysUntilNext(now = new Date()) {
