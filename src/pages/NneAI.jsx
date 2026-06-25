@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Send, ArrowLeft, Sparkles } from 'lucide-react'
+import { Send, ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import {
@@ -11,10 +11,6 @@ import {
   getOrderingState,
 } from '../lib/marketCalendar'
 
-// ============================================
-// NNE AI SYSTEM PROMPT
-// She knows everything about Only Market Days
-// ============================================
 function buildSystemPrompt() {
   const now = new Date()
   const todayMarket = getTodaysMarket(now)
@@ -37,8 +33,8 @@ CURRENT MARKET STATUS (today is ${now.toLocaleDateString('en-NG', { weekday: 'lo
 - Listings go live: 12PM (noon) the day before market
 
 THE TWO MARKETS:
-- Orie Ntigha: Ntigha village, Isiala Ngwa North, Abia State. Every 8 days. Last market: June 18, 2026.
-- Orie Ukwu: Ukwu village, Isiala Ngwa North, Abia State. Every 8 days, alternating with Orie Ntigha. Last market: June 22, 2026.
+- Orie Ntigha: Ntigha village, Isiala Ngwa North, Abia State. Every 8 days.
+- Orie Ukwu: Ukwu village, Isiala Ngwa North, Abia State. Every 8 days, alternating with Orie Ntigha.
 - Together they provide fresh produce every 4 days.
 
 PRODUCTS AVAILABLE:
@@ -50,7 +46,7 @@ PRODUCTS AVAILABLE:
 - Spices: Fresh pepper
 - Fruits: Plantain, seasonal fruits (Ube/African pear July-September, Mango March-June, Udara November-February, Orange November-March)
 - Nuts: Bitterkola, Kolanut
-- Grains: Fresh corn (peak season May-August), Crayfish
+- Grains: Fresh corn (peak season May-August)
 
 PICKUP ZONES:
 - Umuahia: Ubani Motor Park Area — from 12:30PM on market day
@@ -61,31 +57,27 @@ ORDERING:
 - Minimum order: ₦3,500
 - Service fee: ₦500 (same-day), ₦700 (pre-order)
 - Delivery fee: ₦800 (Aba), ₦1,200 (Umuahia), higher for bulk orders
-- Payment via Paystack
+- Payment via Paystack (card or bank transfer)
 
 IGBO MARKET CULTURE YOU KNOW:
 - The four Igbo market days are Eke, Orie, Afọ, and Nkwọ — forming a 4-day week
-- "Orie" (also spelled Oye) is one of the four sacred market days
-- "Ahịa" means market in Igbo
-- "Ahịa Orie" means Orie market
-- Markets in Igboland are deeply social — they are where communities meet, trade, and share news
-- Village women (ụmụ nwanyị obodo) are the backbone of these markets — they wake before dawn to set up
-- Fresh produce at village markets is significantly cheaper than city retailers because there is no middleman
+- "Ahịa" means market in Igbo. "Ahịa Orie" means Orie market
+- Markets in Igboland are deeply social — where communities meet, trade, and share news
+- Village women (ụmụ nwanyị obodo) are the backbone of these markets — waking before dawn to set up
+- Fresh produce at village markets is significantly cheaper than city retailers — no middleman
 - "Nne" means mother — you are named this because you nurture and guide like a mother
+- For diaspora users: acknowledge their connection to home with warmth
 
 PERSONALITY:
 - Warm, patient, and encouraging
 - Occasionally use Igbo words with translations in brackets
-- If someone is from the diaspora, acknowledge their connection to home with warmth
 - Keep answers concise on mobile but thorough when asked
 - If you don't know something specific, say so honestly and suggest they contact the team on WhatsApp
-- Never make up prices or market dates — use the real data above
-- You can answer general cooking questions about Nigerian dishes that use the products sold
-
-Always end responses about ordering with a gentle encouragement to shop or pre-order if the window is open.`
+- Never make up prices or market dates — use only the real data above
+- You can answer general cooking questions about Nigerian dishes using the products sold
+- Always end ordering responses with gentle encouragement to shop or pre-order if the window is open`
 }
 
-// Suggested questions
 const SUGGESTED = [
   { icon: '📅', text: 'When is the next market day?' },
   { icon: '🌿', text: 'What is the difference between Orie Ntigha and Orie Ukwu?' },
@@ -144,7 +136,8 @@ export default function NneAI() {
     setLoading(true)
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // ✅ Now calls our secure Vercel proxy — not Anthropic directly
+      const response = await fetch('/api/nne', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -159,10 +152,19 @@ export default function NneAI() {
       })
 
       const data = await response.json()
-      const reply = data.content?.[0]?.text || 'Sorry, I could not understand that. Please try again.'
+
+      if (!response.ok) {
+        console.error('Nne API error:', data)
+        throw new Error(data.error || 'API error')
+      }
+
+      const reply = data.content?.[0]?.text ||
+        'Ndo nne m (sorry), I could not understand that. Please try again.'
 
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+
     } catch (err) {
+      console.error('Nne error:', err)
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: 'Sorry nne m, I am having trouble connecting right now. Please try again in a moment. 🙏',
@@ -180,7 +182,13 @@ export default function NneAI() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--cream)', display: 'flex', flexDirection: 'column', paddingBottom: 80 }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--cream)',
+      display: 'flex',
+      flexDirection: 'column',
+      paddingBottom: 80,
+    }}>
       <Navbar />
 
       {/* Header */}
@@ -192,7 +200,10 @@ export default function NneAI() {
         zIndex: 50,
       }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green-muted)', fontSize: 13, marginBottom: 12 }}>
+          <Link to="/" style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            color: 'var(--green-muted)', fontSize: 13, marginBottom: 12,
+          }}>
             <ArrowLeft size={15} /> Back
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -207,7 +218,11 @@ export default function NneAI() {
               🌿
             </div>
             <div>
-              <div style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700 }}>
+              <div style={{
+                color: 'white',
+                fontFamily: 'Playfair Display, serif',
+                fontSize: 20, fontWeight: 700,
+              }}>
                 Nne
               </div>
               <div style={{ color: 'var(--green-muted)', fontSize: 12 }}>
@@ -220,16 +235,26 @@ export default function NneAI() {
               background: 'rgba(116,198,157,0.2)',
               borderRadius: 20, padding: '4px 10px',
             }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
-              <span style={{ color: 'var(--green-muted)', fontSize: 11, fontWeight: 600 }}>Online</span>
+              <div style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: '#4ade80',
+              }} />
+              <span style={{
+                color: 'var(--green-muted)', fontSize: 11, fontWeight: 600,
+              }}>
+                Online
+              </span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, maxWidth: 600, margin: '0 auto', width: '100%', padding: '16px' }}>
-
+      <div style={{
+        flex: 1, maxWidth: 600,
+        margin: '0 auto', width: '100%',
+        padding: '16px',
+      }}>
         {messages.map((msg, i) => (
           <div key={i} style={{
             display: 'flex',
@@ -238,7 +263,6 @@ export default function NneAI() {
             gap: 8,
             alignItems: 'flex-end',
           }}>
-            {/* Nne avatar for AI messages */}
             {msg.role === 'assistant' && (
               <div style={{
                 width: 32, height: 32, borderRadius: '50%',
@@ -249,7 +273,6 @@ export default function NneAI() {
                 🌿
               </div>
             )}
-
             <div style={{
               maxWidth: '80%',
               padding: '12px 16px',
@@ -270,23 +293,41 @@ export default function NneAI() {
 
         {/* Typing indicator */}
         {loading && (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #D4A017, #F7B731)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+          <div style={{
+            display: 'flex', alignItems: 'flex-end',
+            gap: 8, marginBottom: 12,
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #D4A017, #F7B731)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 16,
+            }}>
               🌿
             </div>
-            <div style={{ background: 'white', borderRadius: '18px 18px 18px 4px', boxShadow: 'var(--shadow)' }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '18px 18px 18px 4px',
+              boxShadow: 'var(--shadow)',
+            }}>
               <TypingIndicator />
             </div>
           </div>
         )}
 
-        {/* Suggested questions — show only at start */}
+        {/* Suggested questions — only at start */}
         {messages.length === 1 && !loading && (
           <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 12, color: '#888', marginBottom: 10, textAlign: 'center' }}>
+            <div style={{
+              fontSize: 12, color: '#888',
+              marginBottom: 10, textAlign: 'center',
+            }}>
               Try asking Nne...
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+            <div style={{
+              display: 'flex', flexWrap: 'wrap',
+              gap: 8, justifyContent: 'center',
+            }}>
               {SUGGESTED.map(({ icon, text }) => (
                 <button
                   key={text}
@@ -329,7 +370,10 @@ export default function NneAI() {
         padding: '12px 16px',
         zIndex: 90,
       }}>
-        <div style={{ maxWidth: 600, margin: '0 auto', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+        <div style={{
+          maxWidth: 600, margin: '0 auto',
+          display: 'flex', gap: 10, alignItems: 'flex-end',
+        }}>
           <textarea
             ref={inputRef}
             value={input}
