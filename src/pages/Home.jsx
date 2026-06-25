@@ -20,223 +20,100 @@ import {
   TIMING,
 } from '../lib/marketCalendar'
 
-// ============================================
-// MARKET SLIDES
-// Replace image_url with real photos later
-// ============================================
 const MARKET_SLIDES = [
   {
-    id: 1,
-    image_url: null,
+    id: 1, image_url: null,
     bg: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 50%, #40916C 100%)',
-    emoji: '🌿',
-    label: 'Orie Ntigha Market',
-    caption: 'Fresh leafy vegetables — harvested at dawn',
-    accent: '#74C69D',
+    emoji: '🌿', label: 'Orie Ntigha Market',
+    caption: 'Fresh leafy vegetables — harvested at dawn', accent: '#74C69D',
   },
   {
-    id: 2,
-    image_url: null,
+    id: 2, image_url: null,
     bg: 'linear-gradient(135deg, #7B3F00 0%, #C0522B 60%, #E8793A 100%)',
-    emoji: '🫙',
-    label: 'Fresh Palm Oil',
-    caption: 'Unrefined village palm oil — pressed this week',
-    accent: '#F7B731',
+    emoji: '🫙', label: 'Fresh Palm Oil',
+    caption: 'Unrefined village palm oil — pressed this week', accent: '#F7B731',
   },
   {
-    id: 3,
-    image_url: null,
+    id: 3, image_url: null,
     bg: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-    emoji: '🐟',
-    label: 'Stockfish & Crayfish',
-    caption: 'Dried protein — sorted and ready to cook',
-    accent: '#74b9ff',
+    emoji: '🐟', label: 'Stockfish & Crayfish',
+    caption: 'Dried protein — sorted and ready to cook', accent: '#74b9ff',
   },
   {
-    id: 4,
-    image_url: null,
+    id: 4, image_url: null,
     bg: 'linear-gradient(135deg, #2D5016 0%, #4a7c1f 50%, #6db33f 100%)',
-    emoji: '🌽',
-    label: 'Seasonal Produce',
-    caption: 'What is in season is cheapest today',
-    accent: '#F7B731',
+    emoji: '🌽', label: 'Seasonal Produce',
+    caption: 'What is in season is cheapest today', accent: '#F7B731',
   },
   {
-    id: 5,
-    image_url: null,
+    id: 5, image_url: null,
     bg: 'linear-gradient(135deg, #3d1515 0%, #7B2D2D 50%, #C0522B 100%)',
-    emoji: '🐔',
-    label: 'Dressed Meat',
-    caption: 'Processed fresh on market morning',
-    accent: '#FFD460',
+    emoji: '🐔', label: 'Dressed Meat',
+    caption: 'Processed fresh on market morning', accent: '#FFD460',
   },
   {
-    id: 6,
-    image_url: null,
+    id: 6, image_url: null,
     bg: 'linear-gradient(135deg, #1B4332 0%, #9B7E46 100%)',
-    emoji: '🌰',
-    label: 'Bitterkola & Kolanut',
-    caption: 'Fresh village nuts — sorted, no damaged ones',
-    accent: '#D4A017',
+    emoji: '🌰', label: 'Bitterkola & Kolanut',
+    caption: 'Fresh village nuts — sorted, no damaged ones', accent: '#D4A017',
   },
 ]
 
-// ============================================
-// SLIDESHOW COMPONENT
-// ============================================
-function MarketSlideshow() {
+function MarketSlideshow({ slideshowRef }) {
   const [current, setCurrent] = useState(0)
   const [fading, setFading] = useState(false)
   const intervalRef = useRef(null)
 
   function goTo(index) {
     setFading(true)
-    setTimeout(() => {
-      setCurrent(index)
-      setFading(false)
-    }, 300)
+    setTimeout(() => { setCurrent(index); setFading(false) }, 300)
   }
-
-  function next() {
-    goTo((current + 1) % MARKET_SLIDES.length)
-  }
-
-  function prev() {
-    goTo((current - 1 + MARKET_SLIDES.length) % MARKET_SLIDES.length)
-  }
-
+  function next() { goTo((current + 1) % MARKET_SLIDES.length) }
+  function prev() { goTo((current - 1 + MARKET_SLIDES.length) % MARKET_SLIDES.length) }
   function startInterval() {
     clearInterval(intervalRef.current)
-    intervalRef.current = setInterval(() => {
-      setCurrent(c => (c + 1) % MARKET_SLIDES.length)
-    }, 4000)
+    intervalRef.current = setInterval(() => setCurrent(c => (c + 1) % MARKET_SLIDES.length), 4000)
   }
-
-  useEffect(() => {
-    startInterval()
-    return () => clearInterval(intervalRef.current)
-  }, [])
-
-  function handleManualNav(fn) {
-    clearInterval(intervalRef.current)
-    fn()
-    startInterval()
-  }
+  useEffect(() => { startInterval(); return () => clearInterval(intervalRef.current) }, [])
+  function handleManualNav(fn) { clearInterval(intervalRef.current); fn(); startInterval() }
 
   const slide = MARKET_SLIDES[current]
 
   return (
-    <div style={{ position: 'relative', height: 260, overflow: 'hidden' }}>
-      {/* Slide background */}
+    <div ref={slideshowRef} style={{ position: 'relative', height: 260, overflow: 'hidden' }}>
       <div style={{
         position: 'absolute', inset: 0,
-        background: slide.image_url
-          ? `url(${slide.image_url}) center/cover`
-          : slide.bg,
-        opacity: fading ? 0 : 1,
-        transition: 'opacity 0.3s ease',
+        background: slide.image_url ? `url(${slide.image_url}) center/cover` : slide.bg,
+        opacity: fading ? 0 : 1, transition: 'opacity 0.3s ease',
       }} />
-
-      {/* Dark overlay */}
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.28)' }} />
-
-      {/* Decorative circles */}
       <div style={{ position: 'absolute', top: -30, right: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
       <div style={{ position: 'absolute', bottom: -40, left: -20, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
 
-      {/* Slide text */}
       <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        padding: '20px',
-        opacity: fading ? 0 : 1,
-        transition: 'opacity 0.3s ease',
+        position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', padding: '20px',
+        opacity: fading ? 0 : 1, transition: 'opacity 0.3s ease',
       }}>
-        <div style={{ fontSize: 52, marginBottom: 10, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))' }}>
-          {slide.emoji}
-        </div>
-        <div style={{
-          fontFamily: 'Playfair Display, serif',
-          color: 'white', fontSize: 22, fontWeight: 700,
-          marginBottom: 6, textAlign: 'center',
-          textShadow: '0 2px 8px rgba(0,0,0,0.4)',
-        }}>
-          {slide.label}
-        </div>
-        <div style={{
-          color: slide.accent, fontSize: 13, fontWeight: 500,
-          textAlign: 'center', maxWidth: 260, lineHeight: 1.4,
-          textShadow: '0 1px 4px rgba(0,0,0,0.4)',
-        }}>
-          {slide.caption}
-        </div>
+        <div style={{ fontSize: 52, marginBottom: 10, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))' }}>{slide.emoji}</div>
+        <div style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 22, fontWeight: 700, marginBottom: 6, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>{slide.label}</div>
+        <div style={{ color: slide.accent, fontSize: 13, fontWeight: 500, textAlign: 'center', maxWidth: 260, lineHeight: 1.4, textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{slide.caption}</div>
       </div>
 
-      {/* Prev button */}
-      <button
-        onClick={() => handleManualNav(prev)}
-        style={{
-          position: 'absolute', left: 12, top: '50%',
-          transform: 'translateY(-50%)',
-          background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)',
-          border: 'none', borderRadius: '50%',
-          width: 36, height: 36,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'white', cursor: 'pointer', zIndex: 10,
-        }}
-      >
+      <button onClick={() => handleManualNav(prev)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', zIndex: 10 }}>
         <ChevronLeft size={18} />
       </button>
-
-      {/* Next button */}
-      <button
-        onClick={() => handleManualNav(next)}
-        style={{
-          position: 'absolute', right: 12, top: '50%',
-          transform: 'translateY(-50%)',
-          background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)',
-          border: 'none', borderRadius: '50%',
-          width: 36, height: 36,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'white', cursor: 'pointer', zIndex: 10,
-        }}
-      >
+      <button onClick={() => handleManualNav(next)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', zIndex: 10 }}>
         <ChevronRight size={18} />
       </button>
 
-      {/* Dot indicators */}
-      <div style={{
-        position: 'absolute', bottom: 12,
-        left: 0, right: 0,
-        display: 'flex', justifyContent: 'center',
-        gap: 6, zIndex: 10,
-      }}>
+      <div style={{ position: 'absolute', bottom: 12, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 6, zIndex: 10 }}>
         {MARKET_SLIDES.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => handleManualNav(() => goTo(i))}
-            style={{
-              width: i === current ? 20 : 6,
-              height: 6,
-              borderRadius: 3,
-              background: i === current ? 'white' : 'rgba(255,255,255,0.4)',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              transition: 'width 0.3s ease, background 0.3s ease',
-            }}
-          />
+          <button key={i} onClick={() => handleManualNav(() => goTo(i))} style={{ width: i === current ? 20 : 6, height: 6, borderRadius: 3, background: i === current ? 'white' : 'rgba(255,255,255,0.4)', border: 'none', padding: 0, cursor: 'pointer', transition: 'width 0.3s ease, background 0.3s ease' }} />
         ))}
       </div>
 
-      {/* Location badge */}
-      <div style={{
-        position: 'absolute', top: 14, left: 14,
-        background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
-        borderRadius: 20, padding: '4px 12px',
-        display: 'flex', alignItems: 'center', gap: 6, zIndex: 10,
-      }}>
+      <div style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', borderRadius: 20, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 6, zIndex: 10 }}>
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
         <span style={{ color: 'white', fontSize: 11, fontWeight: 600 }}>Isiala Ngwa North</span>
       </div>
@@ -244,9 +121,6 @@ function MarketSlideshow() {
   )
 }
 
-// ============================================
-// CATEGORIES
-// ============================================
 const CATEGORIES = [
   { emoji: '🌿', name: 'Vegetables', slug: 'vegetables' },
   { emoji: '🌾', name: 'Staples', slug: 'staples' },
@@ -266,11 +140,11 @@ const SEASONAL_INTEL = [
   { name: 'Palm Oil (25L)', emoji: '🫙', months: [1,2,3,4,5,6,7,8,9,10,11,12], villagePrice: '₦43,000/keg', cityPrice: '₦55,000+/keg', save: '₦12,000+' },
 ]
 
-// ============================================
-// HOME PAGE
-// ============================================
 export default function Home() {
   const [showPopup, setShowPopup] = useState(false)
+  const [showStickyBtn, setShowStickyBtn] = useState(false)
+  const slideshowRef = useRef(null)
+
   const now = new Date()
   const todayMarket = getTodaysMarket(now)
   const tomorrowMarket = getTomorrowsMarket(now)
@@ -282,6 +156,9 @@ export default function Home() {
   const currentMonth = now.getMonth() + 1
   const currentHour = now.getHours()
 
+  // Show sticky button only when ordering is possible
+  const canOrder = orderingState !== 'browse_only'
+
   useEffect(() => {
     const seen = sessionStorage.getItem('popup_seen')
     if (!seen) {
@@ -290,6 +167,17 @@ export default function Home() {
     }
   }, [])
 
+  // Sticky button — appears after user scrolls past slideshow
+  useEffect(() => {
+    if (!canOrder) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyBtn(!entry.isIntersecting),
+      { threshold: 0 }
+    )
+    if (slideshowRef.current) observer.observe(slideshowRef.current)
+    return () => observer.disconnect()
+  }, [canOrder])
+
   const currentSeasonal = SEASONAL_INTEL.filter(i => i.months.includes(currentMonth))
 
   function getHeroCTA() {
@@ -297,8 +185,12 @@ export default function Home() {
     if (orderingState === 'preorder') return { label: 'Pre-order Now', icon: <ShoppingBasket size={20} /> }
     return { label: `Next Market: ${nextMarket.name}`, icon: <Bell size={20} /> }
   }
-
   const heroCTA = getHeroCTA()
+
+  function getStickyLabel() {
+    if (orderingState === 'same_day') return '🌿 Shop Market Now'
+    return '🌅 Pre-order Now'
+  }
 
   function getHeroSubtitle() {
     if (todayMarket && orderOpen) return `${todayMarket.name.toUpperCase()} IS LIVE TODAY`
@@ -312,12 +204,58 @@ export default function Home() {
     <div style={{ minHeight: '100vh', background: 'var(--cream)', paddingBottom: 80 }}>
       {showPopup && <MarketDayPopup onClose={() => setShowPopup(false)} />}
       <Navbar />
+
+      {/* ── STICKY PRE-ORDER BUTTON ── */}
+      {/* Sits above bottom nav (60px), fades in after slideshow */}
+      <style>{`
+        @keyframes fadeSlideUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+      {canOrder && showStickyBtn && (
+        <div style={{
+          position: 'fixed',
+          bottom: 68,          /* sits just above the 60px bottom nav */
+          left: 16,
+          right: 16,
+          zIndex: 95,
+          animation: 'fadeSlideUp 0.3s ease forwards',
+          pointerEvents: 'auto',
+        }}>
+          <Link
+            to="/market"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              background: orderingState === 'same_day'
+                ? 'var(--orange)'
+                : 'var(--green)',
+              color: 'white',
+              borderRadius: 14,
+              padding: '15px 24px',
+              fontSize: 16,
+              fontWeight: 700,
+              textDecoration: 'none',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+              letterSpacing: 0.3,
+            }}
+          >
+            <ShoppingBasket size={20} />
+            {getStickyLabel()}
+          </Link>
+        </div>
+      )}
+
       <CountdownBanner />
 
       {/* Pre-order banner */}
       {preorderOpen && tomorrowMarket && !orderOpen && (
         <div style={{
           background: 'linear-gradient(90deg, #2D6A4F, var(--green))',
+          /* FIX 1: match padding-left to WeatherBanner's 16px */
           padding: '12px 16px',
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
@@ -346,6 +284,7 @@ export default function Home() {
         <div style={{
           background: 'rgba(27,67,50,0.08)',
           borderBottom: '1px solid var(--cream-dark)',
+          /* FIX 1: consistent 16px left padding */
           padding: '10px 16px',
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
@@ -360,6 +299,7 @@ export default function Home() {
       {!listingVisible && !todayMarket && (
         <div style={{
           background: 'var(--charcoal)',
+          /* FIX 1: consistent 16px left padding */
           padding: '12px 16px',
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', gap: 12,
@@ -378,61 +318,47 @@ export default function Home() {
         </div>
       )}
 
-      {/* Market slideshow */}
-      <MarketSlideshow />
+      {/* Market slideshow — observed for sticky button */}
+      <MarketSlideshow slideshowRef={slideshowRef} />
 
-      {/* Hero text */}
+      {/* Hero section */}
       <div style={{
         background: 'linear-gradient(160deg, var(--green) 0%, var(--green-light) 60%, #40916C 100%)',
         padding: '36px 24px 48px',
         position: 'relative', overflow: 'hidden',
       }}>
         <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
-
         <div style={{ position: 'relative', maxWidth: 480, margin: '0 auto' }}>
           <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 12 }}>
             {getHeroSubtitle()}
           </div>
-
-          {/* lineHeight 1.25 — prevents descender overlap fix */}
           <h1 style={{
             fontFamily: 'Playfair Display, serif',
             color: 'white',
             fontSize: 'clamp(28px, 7vw, 48px)',
-            fontWeight: 900,
-            lineHeight: 1.25,
-            marginBottom: 14,
+            fontWeight: 900, lineHeight: 1.25, marginBottom: 14,
           }}>
             Fresh from the<br />
             <span style={{ color: 'var(--gold)' }}>village.</span><br />
             Only on market days.
           </h1>
-
-          <p style={{
-            color: 'rgba(255,255,255,0.8)',
-            fontSize: 15, lineHeight: 1.6,
-            marginBottom: 24, maxWidth: 380,
-          }}>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 15, lineHeight: 1.6, marginBottom: 24, maxWidth: 380 }}>
             Fresh farm produce from traditional village markets — delivered directly to city buyers. No middlemen. No markup. Just fresh.
           </p>
-
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {orderingState !== 'browse_only' ? (
               <Link to="/market" className="btn-primary" style={{ fontSize: 15, padding: '13px 24px' }}>
-                {heroCTA.icon}
-                {heroCTA.label}
+                {heroCTA.icon}{heroCTA.label}
               </Link>
             ) : (
               <button className="btn-primary" style={{ fontSize: 15, padding: '13px 24px' }} onClick={() => setShowPopup(true)}>
-                {heroCTA.icon}
-                {heroCTA.label}
+                {heroCTA.icon}{heroCTA.label}
               </button>
             )}
             <Link to="/market" className="btn-secondary" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', fontSize: 14 }}>
               Browse Products
             </Link>
           </div>
-
           <div style={{ display: 'flex', gap: 20, marginTop: 24, flexWrap: 'wrap' }}>
             {[
               { icon: '🌿', text: 'Farm fresh' },
@@ -475,38 +401,26 @@ export default function Home() {
         </div>
       )}
 
-      {/* Categories — fixed emoji baseline */}
+      {/* Categories */}
       <div style={{ padding: '36px 16px 0' }}>
         <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
           What we carry
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))', gap: 10 }}>
           {CATEGORIES.map(cat => (
-            <Link
-              key={cat.slug}
-              to={`/market?category=${cat.slug}`}
-              style={{
-                background: 'white', borderRadius: 12,
-                padding: '14px 6px 12px',
-                textAlign: 'center', boxShadow: 'var(--shadow)',
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', textDecoration: 'none',
-                transition: 'transform 0.15s',
-              }}
+            <Link key={cat.slug} to={`/market?category=${cat.slug}`} style={{
+              background: 'white', borderRadius: 12, padding: '14px 6px 12px',
+              textAlign: 'center', boxShadow: 'var(--shadow)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              textDecoration: 'none', transition: 'transform 0.15s',
+            }}
               onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'none'}
             >
-              {/* Fixed height container — baseline alignment fix */}
-              <div style={{
-                height: 36, width: '100%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: 6,
-              }}>
+              <div style={{ height: 36, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
                 <span style={{ fontSize: 26, lineHeight: 1 }}>{cat.emoji}</span>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--charcoal)', lineHeight: 1.3 }}>
-                {cat.name}
-              </span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--charcoal)', lineHeight: 1.3 }}>{cat.name}</span>
             </Link>
           ))}
         </div>
@@ -563,54 +477,27 @@ export default function Home() {
           Something for every day — not just market days
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-
           <Link to="/nne" style={{
-            background: 'var(--green)', borderRadius: 14,
-            padding: '20px', display: 'flex', alignItems: 'center',
-            gap: 16, textDecoration: 'none',
+            background: 'var(--green)', borderRadius: 14, padding: '20px',
+            display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none',
           }}>
-            <div style={{
-              width: 52, height: 52, borderRadius: 12,
-              background: 'rgba(255,255,255,0.15)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 28, flexShrink: 0,
-            }}>
-              🌿
-            </div>
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🌿</div>
             <div>
-              <div style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 2 }}>
-                Ask Nne
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>
-                Your AI market guide — market days, products, Igbo cooking
-              </div>
+              <div style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 2 }}>Ask Nne</div>
+              <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>Your AI market guide — market days, products, Igbo cooking</div>
             </div>
           </Link>
-
           <Link to="/quiz" style={{
             background: 'linear-gradient(135deg, #9B7E46, #C0522B)',
             borderRadius: 14, padding: '20px',
-            display: 'flex', alignItems: 'center',
-            gap: 16, textDecoration: 'none',
+            display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none',
           }}>
-            <div style={{
-              width: 52, height: 52, borderRadius: 12,
-              background: 'rgba(255,255,255,0.15)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 28, flexShrink: 0,
-            }}>
-              🏪
-            </div>
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🏪</div>
             <div>
-              <div style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 2 }}>
-                Ahịa Quiz
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>
-                Test your Igbo market and culture knowledge
-              </div>
+              <div style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 2 }}>Ahịa Quiz</div>
+              <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>Test your Igbo market and culture knowledge</div>
             </div>
           </Link>
-
         </div>
       </div>
 
@@ -646,23 +533,13 @@ export default function Home() {
       {/* Next market preview */}
       <div style={{ padding: '36px 16px 40px' }}>
         <div style={{ background: 'var(--green)', borderRadius: 16, padding: '24px', textAlign: 'center' }}>
-          <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>
-            COMING UP
-          </div>
+          <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>COMING UP</div>
           <h3 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 28, fontWeight: 700, marginBottom: 4 }}>
             {nextMarket.name}
           </h3>
-          <div style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 6 }}>
-            {formatMarketDate(nextDate)}
-          </div>
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 20 }}>
-            Listings go live at 12PM the day before
-          </div>
-          <button
-            className="btn-secondary"
-            style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', margin: '0 auto', display: 'flex' }}
-            onClick={() => setShowPopup(true)}
-          >
+          <div style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 6 }}>{formatMarketDate(nextDate)}</div>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 20 }}>Listings go live at 12PM the day before</div>
+          <button className="btn-secondary" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', margin: '0 auto', display: 'flex' }} onClick={() => setShowPopup(true)}>
             <Bell size={16} />
             Notify me when listings are live
           </button>
