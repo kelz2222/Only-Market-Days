@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ShoppingBasket, Bell, TrendingDown, ArrowRight, Clock } from 'lucide-react'
+import { ShoppingBasket, Bell, TrendingDown, ArrowRight, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import CountdownBanner from '../components/CountdownBanner'
 import MarketDayPopup from '../components/MarketDayPopup'
@@ -18,6 +18,282 @@ import {
   TIMING,
 } from '../lib/marketCalendar'
 
+// ============================================
+// MARKET SLIDES
+// Replace image_url values with real photos
+// from Orie Ntigha when you have them
+// ============================================
+const MARKET_SLIDES = [
+  {
+    id: 1,
+    image_url: null,
+    bg: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 50%, #40916C 100%)',
+    emoji: '🌿',
+    label: 'Orie Ntigha Market',
+    caption: 'Fresh leafy vegetables — harvested at dawn',
+    accent: '#74C69D',
+  },
+  {
+    id: 2,
+    image_url: null,
+    bg: 'linear-gradient(135deg, #7B3F00 0%, #C0522B 60%, #E8793A 100%)',
+    emoji: '🫙',
+    label: 'Fresh Palm Oil',
+    caption: 'Unrefined village palm oil — pressed this week',
+    accent: '#F7B731',
+  },
+  {
+    id: 3,
+    image_url: null,
+    bg: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    emoji: '🐟',
+    label: 'Stockfish & Crayfish',
+    caption: 'Dried protein — sorted and ready to cook',
+    accent: '#74b9ff',
+  },
+  {
+    id: 4,
+    image_url: null,
+    bg: 'linear-gradient(135deg, #2D5016 0%, #4a7c1f 50%, #6db33f 100%)',
+    emoji: '🌽',
+    label: 'Seasonal Produce',
+    caption: 'What is in season is cheapest today',
+    accent: '#F7B731',
+  },
+  {
+    id: 5,
+    image_url: null,
+    bg: 'linear-gradient(135deg, #3d1515 0%, #7B2D2D 50%, #C0522B 100%)',
+    emoji: '🐔',
+    label: 'Dressed Meat',
+    caption: 'Processed fresh on market morning',
+    accent: '#FFD460',
+  },
+  {
+    id: 6,
+    image_url: null,
+    bg: 'linear-gradient(135deg, #1B4332 0%, #9B7E46 100%)',
+    emoji: '🌰',
+    label: 'Bitterkola & Kolanut',
+    caption: 'Fresh village nuts — sorted, no damaged ones',
+    accent: '#D4A017',
+  },
+]
+
+// ============================================
+// MARKET SLIDESHOW COMPONENT
+// ============================================
+function MarketSlideshow() {
+  const [current, setCurrent] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const intervalRef = useRef(null)
+
+  function goTo(index) {
+    if (isTransitioning) return
+    setIsTransitioning(true)
+    setTimeout(() => {
+      setCurrent(index)
+      setIsTransitioning(false)
+    }, 300)
+  }
+
+  function next() {
+    goTo((current + 1) % MARKET_SLIDES.length)
+  }
+
+  function prev() {
+    goTo((current - 1 + MARKET_SLIDES.length) % MARKET_SLIDES.length)
+  }
+
+  // Auto-advance every 4 seconds
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      setCurrent(prev => (prev + 1) % MARKET_SLIDES.length)
+    }, 4000)
+    return () => clearInterval(intervalRef.current)
+  }, [])
+
+  // Reset timer on manual navigation
+  function handleManualNav(fn) {
+    clearInterval(intervalRef.current)
+    fn()
+    intervalRef.current = setInterval(() => {
+      setCurrent(prev => (prev + 1) % MARKET_SLIDES.length)
+    }, 4000)
+  }
+
+  const slide = MARKET_SLIDES[current]
+
+  return (
+    <div style={{
+      position: 'relative',
+      height: 260,
+      overflow: 'hidden',
+      background: slide.bg,
+    }}>
+      {/* Slide content */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: slide.image_url
+          ? `url(${slide.image_url}) center/cover`
+          : slide.bg,
+        opacity: isTransitioning ? 0 : 1,
+        transition: 'opacity 0.3s ease',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+      }}>
+        {/* Dark overlay for text readability */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.25)',
+        }} />
+
+        {/* Decorative circles */}
+        <div style={{
+          position: 'absolute',
+          top: -30, right: -30,
+          width: 160, height: 160,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.05)',
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: -40, left: -20,
+          width: 180, height: 180,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.04)',
+        }} />
+
+        {/* Slide text */}
+        <div style={{ position: 'relative', textAlign: 'center' }}>
+          <div style={{ fontSize: 56, marginBottom: 10, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))' }}>
+            {slide.emoji}
+          </div>
+          <div style={{
+            fontFamily: 'Playfair Display, serif',
+            color: 'white',
+            fontSize: 22,
+            fontWeight: 700,
+            marginBottom: 6,
+            textShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          }}>
+            {slide.label}
+          </div>
+          <div style={{
+            color: slide.accent,
+            fontSize: 13,
+            fontWeight: 500,
+            textShadow: '0 1px 4px rgba(0,0,0,0.4)',
+            maxWidth: 260,
+            lineHeight: 1.4,
+          }}>
+            {slide.caption}
+          </div>
+        </div>
+      </div>
+
+      {/* Prev button */}
+      <button
+        onClick={() => handleManualNav(prev)}
+        style={{
+          position: 'absolute', left: 12, top: '50%',
+          transform: 'translateY(-50%)',
+          background: 'rgba(0,0,0,0.3)',
+          border: 'none', borderRadius: '50%',
+          width: 36, height: 36,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'white', cursor: 'pointer',
+          backdropFilter: 'blur(4px)',
+          transition: 'background 0.2s',
+          zIndex: 10,
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.3)'}
+      >
+        <ChevronLeft size={18} />
+      </button>
+
+      {/* Next button */}
+      <button
+        onClick={() => handleManualNav(next)}
+        style={{
+          position: 'absolute', right: 12, top: '50%',
+          transform: 'translateY(-50%)',
+          background: 'rgba(0,0,0,0.3)',
+          border: 'none', borderRadius: '50%',
+          width: 36, height: 36,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'white', cursor: 'pointer',
+          backdropFilter: 'blur(4px)',
+          transition: 'background 0.2s',
+          zIndex: 10,
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.3)'}
+      >
+        <ChevronRight size={18} />
+      </button>
+
+      {/* Dot indicators */}
+      <div style={{
+        position: 'absolute',
+        bottom: 12, left: 0, right: 0,
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 6,
+        zIndex: 10,
+      }}>
+        {MARKET_SLIDES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => handleManualNav(() => goTo(i))}
+            style={{
+              width: i === current ? 20 : 6,
+              height: 6,
+              borderRadius: 3,
+              background: i === current ? 'white' : 'rgba(255,255,255,0.4)',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              transition: 'width 0.3s ease, background 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Market label badge top left */}
+      <div style={{
+        position: 'absolute',
+        top: 14, left: 14,
+        background: 'rgba(0,0,0,0.4)',
+        backdropFilter: 'blur(8px)',
+        borderRadius: 20,
+        padding: '4px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        zIndex: 10,
+      }}>
+        <div style={{
+          width: 6, height: 6, borderRadius: '50%',
+          background: '#4ade80',
+        }} />
+        <span style={{ color: 'white', fontSize: 11, fontWeight: 600 }}>
+          Isiala Ngwa North
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// ============================================
+// CATEGORIES
+// ============================================
 const CATEGORIES = [
   { emoji: '🌿', name: 'Vegetables', slug: 'vegetables' },
   { emoji: '🌾', name: 'Staples', slug: 'staples' },
@@ -37,6 +313,9 @@ const SEASONAL_INTEL = [
   { name: 'Palm Oil (25L)', emoji: '🫙', months: [1,2,3,4,5,6,7,8,9,10,11,12], villagePrice: '₦43,000/keg', cityPrice: '₦55,000+/keg', save: '₦12,000+' },
 ]
 
+// ============================================
+// HOME PAGE
+// ============================================
 export default function Home() {
   const [showPopup, setShowPopup] = useState(false)
   const now = new Date()
@@ -47,7 +326,6 @@ export default function Home() {
   const preorderOpen = isPreorderOpen(now)
   const listingVisible = isListingVisible(now)
   const orderingState = getOrderingState(now)
-  const activeListingMarket = getActiveListingMarket(now)
   const currentMonth = now.getMonth() + 1
   const currentHour = now.getHours()
 
@@ -154,10 +432,15 @@ export default function Home() {
         </div>
       )}
 
-      {/* Hero */}
+      {/* ============================================
+          MARKET SLIDESHOW — appears before hero text
+          ============================================ */}
+      <MarketSlideshow />
+
+      {/* Hero text section — below the slideshow */}
       <div style={{
         background: 'linear-gradient(160deg, var(--green) 0%, var(--green-light) 60%, #40916C 100%)',
-        padding: '48px 24px 56px',
+        padding: '36px 24px 48px',
         position: 'relative',
         overflow: 'hidden',
       }}>
@@ -168,7 +451,6 @@ export default function Home() {
         }} />
 
         <div style={{ position: 'relative', maxWidth: 480, margin: '0 auto' }}>
-          {/* Dynamic subtitle */}
           <div style={{
             color: 'var(--green-muted)',
             fontSize: 12, fontWeight: 600,
@@ -177,15 +459,14 @@ export default function Home() {
             {getHeroSubtitle()}
           </div>
 
-          {/* ✅ FIX 1 — lineHeight increased from 1.1 to 1.25 */}
-          {/* This prevents "village." descender overlapping "Only" */}
+          {/* FIX — lineHeight 1.25 prevents descender overlap */}
           <h1 style={{
             fontFamily: 'Playfair Display, serif',
             color: 'white',
-            fontSize: 'clamp(32px, 8vw, 52px)',
+            fontSize: 'clamp(28px, 7vw, 48px)',
             fontWeight: 900,
             lineHeight: 1.25,
-            marginBottom: 16,
+            marginBottom: 14,
           }}>
             Fresh from the<br />
             <span style={{ color: 'var(--gold)' }}>village.</span><br />
@@ -194,34 +475,34 @@ export default function Home() {
 
           <p style={{
             color: 'rgba(255,255,255,0.8)',
-            fontSize: 16, lineHeight: 1.6,
-            marginBottom: 28, maxWidth: 380,
+            fontSize: 15, lineHeight: 1.6,
+            marginBottom: 24, maxWidth: 380,
           }}>
             Fresh farm produce from traditional village markets — delivered directly to city buyers. No middlemen. No markup. Just fresh.
           </p>
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {orderingState !== 'browse_only' ? (
-              <Link to="/market" className="btn-primary" style={{ fontSize: 16, padding: '14px 28px' }}>
+              <Link to="/market" className="btn-primary" style={{ fontSize: 15, padding: '13px 24px' }}>
                 {heroCTA.icon}
                 {heroCTA.label}
               </Link>
             ) : (
               <button
                 className="btn-primary"
-                style={{ fontSize: 16, padding: '14px 28px' }}
+                style={{ fontSize: 15, padding: '13px 24px' }}
                 onClick={() => setShowPopup(true)}
               >
                 {heroCTA.icon}
                 {heroCTA.label}
               </button>
             )}
-            <Link to="/market" className="btn-secondary" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', fontSize: 15 }}>
+            <Link to="/market" className="btn-secondary" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', fontSize: 14 }}>
               Browse Products
             </Link>
           </div>
 
-          <div style={{ display: 'flex', gap: 24, marginTop: 32, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 20, marginTop: 24, flexWrap: 'wrap' }}>
             {[
               { icon: '🌿', text: 'Farm fresh' },
               { icon: '🚐', text: 'Delivered to your city' },
@@ -270,7 +551,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ FIX 2 — Categories grid with fixed emoji height for baseline alignment */}
+      {/* FIX — Categories with fixed emoji height for baseline alignment */}
       <div style={{ padding: '36px 16px 0' }}>
         <h2 style={{
           fontFamily: 'Playfair Display, serif',
@@ -296,7 +577,6 @@ export default function Home() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: 0,
                 textDecoration: 'none',
                 transition: 'transform 0.15s',
               }}
@@ -315,11 +595,8 @@ export default function Home() {
                 <span style={{ fontSize: 26, lineHeight: 1 }}>{cat.emoji}</span>
               </div>
               <span style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: 'var(--charcoal)',
-                lineHeight: 1.3,
-                display: 'block',
+                fontSize: 11, fontWeight: 600,
+                color: 'var(--charcoal)', lineHeight: 1.3,
               }}>
                 {cat.name}
               </span>
@@ -380,36 +657,15 @@ export default function Home() {
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {[
-            {
-              step: '01',
-              title: 'Browse from noon, day before',
-              desc: 'Listings go live at 12PM the day before market. Pre-order that evening for guaranteed first pick at 5AM.',
-              icon: '📱',
-            },
-            {
-              step: '02',
-              title: 'We shop for you',
-              desc: 'Our market agent buys your items fresh from village sellers early morning before the market fills up.',
-              icon: '🛒',
-            },
-            {
-              step: '03',
-              title: 'Packaged clean',
-              desc: 'Every item is sorted, prepped and packed in food-grade transparent bags. Meat processed fresh on market morning.',
-              icon: '📦',
-            },
-            {
-              step: '04',
-              title: 'Collect in your city',
-              desc: 'Pick up in Aba from 3PM or Umuahia from 12:30PM. Or pay a keke rider for door delivery.',
-              icon: '🚐',
-            },
+            { step: '01', title: 'Browse from noon, day before', desc: 'Listings go live at 12PM the day before market. Pre-order that evening for guaranteed first pick at 5AM.', icon: '📱' },
+            { step: '02', title: 'We shop for you', desc: 'Our market agent buys your items fresh from village sellers early morning before the market fills up.', icon: '🛒' },
+            { step: '03', title: 'Packaged clean', desc: 'Every item is sorted, prepped and packed in food-grade transparent bags. Meat processed fresh on market morning.', icon: '📦' },
+            { step: '04', title: 'Collect in your city', desc: 'Pick up in Aba from 3PM or Umuahia from 12:30PM. Or pay a keke rider for door delivery.', icon: '🚐' },
           ].map(({ step, title, desc, icon }, i) => (
             <div key={step} style={{ display: 'flex', gap: 16, position: 'relative' }}>
               {i < 3 && (
                 <div style={{
-                  position: 'absolute', left: 20, top: 52, bottom: 0,
-                  width: 2,
+                  position: 'absolute', left: 20, top: 52, bottom: 0, width: 2,
                   background: 'linear-gradient(to bottom, var(--green-muted), transparent)',
                 }} />
               )}
@@ -422,9 +678,7 @@ export default function Home() {
                 {icon}
               </div>
               <div style={{ paddingBottom: 28 }}>
-                <div style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: 'var(--green)', marginBottom: 4 }}>
-                  {step}
-                </div>
+                <div style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: 'var(--green)', marginBottom: 4 }}>{step}</div>
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{title}</div>
                 <div style={{ fontSize: 14, color: '#666', lineHeight: 1.5 }}>{desc}</div>
               </div>
@@ -439,16 +693,10 @@ export default function Home() {
           background: 'var(--green)', borderRadius: 16,
           padding: '24px', textAlign: 'center',
         }}>
-          <div style={{
-            color: 'var(--green-muted)', fontSize: 12,
-            fontWeight: 600, letterSpacing: 2, marginBottom: 8,
-          }}>
+          <div style={{ color: 'var(--green-muted)', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>
             COMING UP
           </div>
-          <h3 style={{
-            fontFamily: 'Playfair Display, serif', color: 'white',
-            fontSize: 28, fontWeight: 700, marginBottom: 4,
-          }}>
+          <h3 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 28, fontWeight: 700, marginBottom: 4 }}>
             {nextMarket.name}
           </h3>
           <div style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 6 }}>
@@ -459,10 +707,7 @@ export default function Home() {
           </div>
           <button
             className="btn-secondary"
-            style={{
-              borderColor: 'rgba(255,255,255,0.3)',
-              color: 'white', margin: '0 auto', display: 'flex',
-            }}
+            style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', margin: '0 auto', display: 'flex' }}
             onClick={() => setShowPopup(true)}
           >
             <Bell size={16} />
