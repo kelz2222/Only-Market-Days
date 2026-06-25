@@ -19,7 +19,9 @@ export default function App() {
   function addToCart(product) {
     setCartItems(prev => {
       const existing = prev.find(i => i.id === product.id)
-      if (existing) return prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i)
+      if (existing) {
+        return prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i)
+      }
       return [...prev, { ...product, qty: 1 }]
     })
   }
@@ -33,14 +35,20 @@ export default function App() {
     setCartItems(prev => prev.map(i => i.id === productId ? { ...i, qty } : i))
   }
 
-  function clearCart() { setCartItems([]) }
+  function clearCart() {
+    setCartItems([])
+  }
 
   const cartTotal = cartItems.reduce((sum, i) => sum + (i.price * i.qty), 0)
   const cartCount = cartItems.reduce((sum, i) => sum + i.qty, 0)
 
   return (
-    <CartContext.Provider value={{ cartItems, cartTotal, cartCount, addToCart, removeFromCart, updateQty, clearCart }}>
+    <CartContext.Provider value={{
+      cartItems, cartTotal, cartCount,
+      addToCart, removeFromCart, updateQty, clearCart,
+    }}>
       <Routes>
+        {/* Buyer routes */}
         <Route path="/" element={<Home />} />
         <Route path="/market" element={<Market />} />
         <Route path="/cart" element={<Cart />} />
@@ -48,8 +56,12 @@ export default function App() {
         <Route path="/order/:orderNumber" element={<OrderConfirmation />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/auth" element={<Auth />} />
+
+        {/* Engagement routes */}
         <Route path="/nne" element={<NneAI />} />
         <Route path="/quiz" element={<AhiaQuiz />} />
+
+        {/* Staff portals */}
         <Route path="/agent/*" element={<AgentApp />} />
         <Route path="/owner/*" element={<OwnerApp />} />
       </Routes>
