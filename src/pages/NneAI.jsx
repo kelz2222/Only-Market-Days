@@ -9,7 +9,7 @@ import {
   getOrderingState,
 } from '../lib/marketCalendar'
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
+const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY
 
 function buildSystemPrompt() {
   const now = new Date()
@@ -136,13 +136,21 @@ export default function NneAI() {
     setMessages(updatedMessages)
     setLoading(true)
 
+    // ── DEBUG: show key status on screen ──
+    if (!GEMINI_KEY) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '⚠️ DEBUG: VITE_GEMINI_API_KEY is not set. Check Vercel environment variables and make sure you redeployed after adding it.',
+      }])
+      setLoading(false)
+      return
+    }
+
     try {
       const systemPrompt = buildSystemPrompt()
 
-      // Build conversation history for Gemini
-      // Skip opening assistant message, Gemini needs user first
       const history = updatedMessages
-        .slice(0, -1) // all except last user message
+        .slice(0, -1)
         .filter((_, i) => !(i === 0 && updatedMessages[0].role === 'assistant'))
         .map(m => ({
           role: m.role === 'assistant' ? 'model' : 'user',
@@ -155,7 +163,7 @@ export default function NneAI() {
       ]
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -174,21 +182,34 @@ export default function NneAI() {
 
       const data = await response.json()
 
+      // ── DEBUG: show exact API error on screen ──
       if (!response.ok) {
-        console.error('Gemini error:', data)
-        throw new Error(data.error?.message || 'Gemini API error')
+        const errMsg = data.error?.message || JSON.stringify(data)
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `⚠️ DEBUG — Gemini API error ${response.status}:\n${errMsg}`,
+        }])
+        setLoading(false)
+        return
       }
 
       const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
-      if (!reply) throw new Error('No response from Gemini')
+      if (!reply) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `⚠️ DEBUG — No text in response:\n${JSON.stringify(data).slice(0, 300)}`,
+        }])
+        setLoading(false)
+        return
+      }
 
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
 
     } catch (err) {
-      console.error('Nne error:', err)
+      // ── DEBUG: show exact exception on screen ──
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Sorry nne m, I am having trouble connecting right now. Please try again in a moment. 🙏',
+        content: `⚠️ DEBUG — Exception:\n${err.message}\n\nKey exists: ${!!GEMINI_KEY}\nKey starts with: ${GEMINI_KEY?.slice(0, 6)}...`,
       }])
     }
 
@@ -257,14 +278,20 @@ export default function NneAI() {
               borderRadius: 20, padding: '4px 10px',
             }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
-              <span style={{ color: 'var(--green-muted)', fontSize: 11, fontWeight: 600 }}>Online</span>
+              <span style={{ color: 'var(--green-muted)', fontSize: 11, fontWeight: 600 }}>
+                Online
+              </span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, maxWidth: 600, margin: '0 auto', width: '100%', padding: '16px' }}>
+      <div style={{
+        flex: 1, maxWidth: 600,
+        margin: '0 auto', width: '100%',
+        padding: '16px',
+      }}>
         {messages.map((msg, i) => (
           <div key={i} style={{
             display: 'flex',
@@ -283,7 +310,9 @@ export default function NneAI() {
             )}
             <div style={{
               maxWidth: '80%', padding: '12px 16px',
-              borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+              borderRadius: msg.role === 'user'
+                ? '18px 18px 4px 18px'
+                : '18px 18px 18px 4px',
               background: msg.role === 'user' ? 'var(--green)' : 'white',
               color: msg.role === 'user' ? 'white' : 'var(--charcoal)',
               fontSize: 14, lineHeight: 1.6,
@@ -299,9 +328,16 @@ export default function NneAI() {
             <div style={{
               width: 32, height: 32, borderRadius: '50%',
               background: 'linear-gradient(135deg, #D4A017, #F7B731)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
-            }}>🌿</div>
-            <div style={{ background: 'white', borderRadius: '18px 18px 18px 4px', boxShadow: 'var(--shadow)' }}>
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 16,
+            }}>
+              🌿
+            </div>
+            <div style={{
+              background: 'white',
+              borderRadius: '18px 18px 18px 4px',
+              boxShadow: 'var(--shadow)',
+            }}>
               <TypingIndicator />
             </div>
           </div>
@@ -309,18 +345,30 @@ export default function NneAI() {
 
         {messages.length === 1 && !loading && (
           <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 12, color: '#888', marginBottom: 10, textAlign: 'center' }}>
+            <div style={{
+              fontSize: 12, color: '#888',
+              marginBottom: 10, textAlign: 'center',
+            }}>
               Try asking Nne...
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+            <div style={{
+              display: 'flex', flexWrap: 'wrap',
+              gap: 8, justifyContent: 'center',
+            }}>
               {SUGGESTED.map(({ icon, text }) => (
-                <button key={text} onClick={() => sendMessage(text)} style={{
-                  background: 'white', border: '1.5px solid var(--cream-dark)',
-                  borderRadius: 20, padding: '8px 14px', fontSize: 13,
-                  color: 'var(--charcoal)', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  boxShadow: 'var(--shadow)', transition: 'border-color 0.2s',
-                }}
+                <button
+                  key={text}
+                  onClick={() => sendMessage(text)}
+                  style={{
+                    background: 'white',
+                    border: '1.5px solid var(--cream-dark)',
+                    borderRadius: 20, padding: '8px 14px',
+                    fontSize: 13, color: 'var(--charcoal)',
+                    cursor: 'pointer', display: 'flex',
+                    alignItems: 'center', gap: 6,
+                    boxShadow: 'var(--shadow)',
+                    transition: 'border-color 0.2s',
+                  }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--green)'}
                   onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--cream-dark)'}
                 >
@@ -335,11 +383,16 @@ export default function NneAI() {
 
       {/* Input bar */}
       <div style={{
-        position: 'fixed', bottom: 60, left: 0, right: 0,
-        background: 'white', borderTop: '1px solid var(--cream-dark)',
+        position: 'fixed', bottom: 60,
+        left: 0, right: 0,
+        background: 'white',
+        borderTop: '1px solid var(--cream-dark)',
         padding: '12px 16px', zIndex: 90,
       }}>
-        <div style={{ maxWidth: 600, margin: '0 auto', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+        <div style={{
+          maxWidth: 600, margin: '0 auto',
+          display: 'flex', gap: 10, alignItems: 'flex-end',
+        }}>
           <textarea
             ref={inputRef}
             value={input}
@@ -348,11 +401,14 @@ export default function NneAI() {
             placeholder="Ask Nne anything..."
             rows={1}
             style={{
-              flex: 1, padding: '12px 14px', borderRadius: 20,
-              border: '1.5px solid var(--cream-dark)', fontSize: 14,
-              outline: 'none', resize: 'none',
-              fontFamily: 'DM Sans, sans-serif', lineHeight: 1.4,
-              maxHeight: 100, overflowY: 'auto', background: 'var(--cream)',
+              flex: 1, padding: '12px 14px',
+              borderRadius: 20,
+              border: '1.5px solid var(--cream-dark)',
+              fontSize: 14, outline: 'none',
+              resize: 'none',
+              fontFamily: 'DM Sans, sans-serif',
+              lineHeight: 1.4, maxHeight: 100,
+              overflowY: 'auto', background: 'var(--cream)',
             }}
             onInput={e => {
               e.target.style.height = 'auto'
@@ -365,7 +421,8 @@ export default function NneAI() {
             style={{
               width: 44, height: 44, borderRadius: '50%',
               background: input.trim() && !loading ? 'var(--green)' : 'var(--cream-dark)',
-              border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: input.trim() && !loading ? 'pointer' : 'not-allowed',
               transition: 'background 0.2s', flexShrink: 0,
             }}
