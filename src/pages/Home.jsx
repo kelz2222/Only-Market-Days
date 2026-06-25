@@ -686,7 +686,55 @@ export default function Home() {
           ))}
         </div>
       </div>
+      {/* Engage section — Nne AI and Ahịa Quiz */}
+<div style={{ padding: '36px 16px 0' }}>
+  <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, marginBottom: 6 }}>
+    Explore between market days
+  </h2>
+  <p style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>
+    Something for every day — not just market days
+  </p>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
+    <Link to="/nne" style={{
+      background: 'var(--green)', borderRadius: 14,
+      padding: '20px', display: 'flex', alignItems: 'center',
+      gap: 16, textDecoration: 'none',
+    }}>
+      <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>
+        🌿
+      </div>
+      <div>
+        <div style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 2 }}>
+          Ask Nne
+        </div>
+        <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>
+          Your AI market guide — market days, products, Igbo cooking
+        </div>
+      </div>
+    </Link>
+
+    <Link to="/quiz" style={{
+      background: 'linear-gradient(135deg, #9B7E46, #C0522B)',
+      borderRadius: 14,
+      padding: '20px', display: 'flex', alignItems: 'center',
+      gap: 16, textDecoration: 'none',
+    }}>
+      <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>
+        🏪
+      </div>
+      <div>
+        <div style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 2 }}>
+          Ahịa Quiz
+        </div>
+        <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>
+          Test your Igbo market and culture knowledge
+        </div>
+      </div>
+    </Link>
+
+  </div>
+</div>
       {/* Next market preview */}
       <div style={{ padding: '36px 16px 40px' }}>
         <div style={{
