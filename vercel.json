@@ -1,10 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/api/nne",
-      "destination": "/api/nne.mjs"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
