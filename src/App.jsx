@@ -8,6 +8,8 @@ import Checkout from './pages/Checkout'
 import OrderConfirmation from './pages/OrderConfirmation'
 import Profile from './pages/Profile'
 import Auth from './pages/Auth'
+import NneAI from './pages/NneAI'
+import AhiaQuiz from './pages/AhiaQuiz'
 import AgentApp from './agent/AgentApp'
 import OwnerApp from './owner/OwnerApp'
 
@@ -17,9 +19,7 @@ export default function App() {
   function addToCart(product) {
     setCartItems(prev => {
       const existing = prev.find(i => i.id === product.id)
-      if (existing) {
-        return prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i)
-      }
+      if (existing) return prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i)
       return [...prev, { ...product, qty: 1 }]
     })
   }
@@ -48,6 +48,8 @@ export default function App() {
         <Route path="/order/:orderNumber" element={<OrderConfirmation />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/nne" element={<NneAI />} />
+        <Route path="/quiz" element={<AhiaQuiz />} />
         <Route path="/agent/*" element={<AgentApp />} />
         <Route path="/owner/*" element={<OwnerApp />} />
       </Routes>
