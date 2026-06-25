@@ -38,7 +38,7 @@ THE TWO MARKETS:
 PRODUCTS AVAILABLE:
 - Leafy vegetables: Ugu (fluted pumpkin), Ukazi (afang leaf), Uziza
 - Staples: Yam, Garri, Akpu/Fufu
-- Palm produce: Palm oil (25 litres, N42,000-N45,000), Palm fruit (rice bags)
+- Palm produce: Palm oil (25 litres, ₦42,000-₦45,000), Palm fruit (rice bags)
 - Dried protein: Stockfish (Okporoko), Crayfish
 - Dressed meat: Chicken, Goat (pre-order only, with cutting options)
 - Spices: Fresh pepper
@@ -49,19 +49,19 @@ PRODUCTS AVAILABLE:
 PICKUP ZONES:
 - Umuahia: Ubani Motor Park Area — from 12:30PM on market day
 - Aba: Osisioma Junction — from 3:00PM on market day
-- Keke last-mile delivery available at pickup points (N500-N1,000 extra)
+- Keke last-mile delivery available at pickup points (₦500-₦1,000 extra)
 
 ORDERING:
-- Minimum order: N3,500
-- Service fee: N500 (same-day), N700 (pre-order)
-- Delivery fee: N800 (Aba), N1,200 (Umuahia), higher for bulk orders
+- Minimum order: ₦3,500
+- Service fee: ₦500 (same-day), ₦700 (pre-order)
+- Delivery fee: ₦800 (Aba), ₦1,200 (Umuahia), higher for bulk orders
 - Payment via Paystack (card or bank transfer)
 
 IGBO MARKET CULTURE YOU KNOW:
-- The four Igbo market days are Eke, Orie, Afo, and Nkwo — forming a 4-day week
-- "Ahia" means market in Igbo. "Ahia Orie" means Orie market
+- The four Igbo market days are Eke, Orie, Afọ, and Nkwọ — forming a 4-day week
+- "Ahịa" means market in Igbo. "Ahịa Orie" means Orie market
 - Markets in Igboland are deeply social — where communities meet, trade, and share news
-- Village women (umu nwanyi obodo) are the backbone of these markets — waking before dawn to set up
+- Village women (ụmụ nwanyị obodo) are the backbone of these markets — waking before dawn
 - Fresh produce at village markets is significantly cheaper than city retailers — no middleman
 - "Nne" means mother — you are named this because you nurture and guide like a mother
 - For diaspora users: acknowledge their connection to home with warmth
@@ -70,10 +70,10 @@ PERSONALITY:
 - Warm, patient, and encouraging
 - Occasionally use Igbo words with translations in brackets
 - Keep answers concise on mobile but thorough when asked
-- If you do not know something specific, say so honestly and suggest they contact the team on WhatsApp
+- If you do not know something, say so honestly and suggest they contact the team on WhatsApp
 - Never make up prices or market dates — use only the real data above
 - You can answer general cooking questions about Nigerian dishes using the products sold
-- Always end ordering responses with gentle encouragement to shop or pre-order if the window is open`
+- Always end ordering responses with gentle encouragement to pre-order if the window is open`
 }
 
 const SUGGESTED = [
@@ -130,7 +130,8 @@ export default function NneAI() {
     if (!userMessage || loading) return
 
     setInput('')
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }])
+    const updatedMessages = [...messages, { role: 'user', content: userMessage }]
+    setMessages(updatedMessages)
     setLoading(true)
 
     try {
@@ -138,13 +139,11 @@ export default function NneAI() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
           system: buildSystemPrompt(),
-          messages: [
-            ...messages.map(m => ({ role: m.role, content: m.content })),
-            { role: 'user', content: userMessage },
-          ],
+          // Skip the first assistant welcome message — Gemini doesn't need it
+          messages: updatedMessages
+            .filter((_, i) => !(i === 0 && updatedMessages[0].role === 'assistant'))
+            .map(m => ({ role: m.role, content: m.content })),
         }),
       })
 
@@ -156,7 +155,7 @@ export default function NneAI() {
       }
 
       const reply = data.content?.[0]?.text ||
-        'Ndo nne m (sorry), I could not understand that. Please try again.'
+        'Ndo nne m, I could not understand that. Please try again.'
 
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
 
@@ -232,7 +231,10 @@ export default function NneAI() {
               background: 'rgba(116,198,157,0.2)',
               borderRadius: 20, padding: '4px 10px',
             }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
+              <div style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: '#4ade80',
+              }} />
               <span style={{ color: 'var(--green-muted)', fontSize: 11, fontWeight: 600 }}>
                 Online
               </span>
@@ -303,12 +305,19 @@ export default function NneAI() {
           </div>
         )}
 
+        {/* Suggested questions — only at start */}
         {messages.length === 1 && !loading && (
           <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 12, color: '#888', marginBottom: 10, textAlign: 'center' }}>
+            <div style={{
+              fontSize: 12, color: '#888',
+              marginBottom: 10, textAlign: 'center',
+            }}>
               Try asking Nne...
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+            <div style={{
+              display: 'flex', flexWrap: 'wrap',
+              gap: 8, justifyContent: 'center',
+            }}>
               {SUGGESTED.map(({ icon, text }) => (
                 <button
                   key={text}
@@ -325,6 +334,7 @@ export default function NneAI() {
                     alignItems: 'center',
                     gap: 6,
                     boxShadow: 'var(--shadow)',
+                    transition: 'border-color 0.2s',
                   }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--green)'}
                   onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--cream-dark)'}
@@ -350,7 +360,10 @@ export default function NneAI() {
         padding: '12px 16px',
         zIndex: 90,
       }}>
-        <div style={{ maxWidth: 600, margin: '0 auto', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+        <div style={{
+          maxWidth: 600, margin: '0 auto',
+          display: 'flex', gap: 10, alignItems: 'flex-end',
+        }}>
           <textarea
             ref={inputRef}
             value={input}
