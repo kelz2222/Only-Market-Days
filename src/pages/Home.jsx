@@ -89,7 +89,6 @@ function MarketSlideshow({ slideshowRef }) {
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.28)' }} />
       <div style={{ position: 'absolute', top: -30, right: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
       <div style={{ position: 'absolute', bottom: -40, left: -20, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
-
       <div style={{
         position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', padding: '20px',
@@ -99,20 +98,17 @@ function MarketSlideshow({ slideshowRef }) {
         <div style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 22, fontWeight: 700, marginBottom: 6, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>{slide.label}</div>
         <div style={{ color: slide.accent, fontSize: 13, fontWeight: 500, textAlign: 'center', maxWidth: 260, lineHeight: 1.4, textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{slide.caption}</div>
       </div>
-
       <button onClick={() => handleManualNav(prev)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', zIndex: 10 }}>
         <ChevronLeft size={18} />
       </button>
       <button onClick={() => handleManualNav(next)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', zIndex: 10 }}>
         <ChevronRight size={18} />
       </button>
-
       <div style={{ position: 'absolute', bottom: 12, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 6, zIndex: 10 }}>
         {MARKET_SLIDES.map((_, i) => (
           <button key={i} onClick={() => handleManualNav(() => goTo(i))} style={{ width: i === current ? 20 : 6, height: 6, borderRadius: 3, background: i === current ? 'white' : 'rgba(255,255,255,0.4)', border: 'none', padding: 0, cursor: 'pointer', transition: 'width 0.3s ease, background 0.3s ease' }} />
         ))}
       </div>
-
       <div style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', borderRadius: 20, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 6, zIndex: 10 }}>
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
         <span style={{ color: 'white', fontSize: 11, fontWeight: 600 }}>Isiala Ngwa North</span>
@@ -143,9 +139,15 @@ const SEASONAL_INTEL = [
 export default function Home() {
   const [showPopup, setShowPopup] = useState(false)
   const [showStickyBtn, setShowStickyBtn] = useState(false)
+  const [now, setNow] = useState(new Date())
   const slideshowRef = useRef(null)
 
-  const now = new Date()
+  // ── Refresh time every minute so market state stays accurate ──
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60000)
+    return () => clearInterval(id)
+  }, [])
+
   const todayMarket = getTodaysMarket(now)
   const tomorrowMarket = getTomorrowsMarket(now)
   const { market: nextMarket, date: nextDate } = getNextMarket(now)
@@ -155,8 +157,9 @@ export default function Home() {
   const orderingState = getOrderingState(now)
   const currentMonth = now.getMonth() + 1
   const currentHour = now.getHours()
+  const currentSeasonal = SEASONAL_INTEL.filter(i => i.months.includes(currentMonth))
 
-  // Show sticky button only when ordering is possible
+  // Only show sticky CTA when ordering is actually possible
   const canOrder = orderingState !== 'browse_only'
 
   useEffect(() => {
@@ -167,7 +170,6 @@ export default function Home() {
     }
   }, [])
 
-  // Sticky button — appears after user scrolls past slideshow
   useEffect(() => {
     if (!canOrder) return
     const observer = new IntersectionObserver(
@@ -178,26 +180,90 @@ export default function Home() {
     return () => observer.disconnect()
   }, [canOrder])
 
-  const currentSeasonal = SEASONAL_INTEL.filter(i => i.months.includes(currentMonth))
-
-  function getHeroCTA() {
-    if (orderingState === 'same_day') return { label: 'Shop Market Now', icon: <ShoppingBasket size={20} /> }
-    if (orderingState === 'preorder') return { label: 'Pre-order Now', icon: <ShoppingBasket size={20} /> }
-    return { label: `Next Market: ${nextMarket.name}`, icon: <Bell size={20} /> }
+  // ── Single source of truth for what the CTA says ──
+  function getCTA() {
+    if (orderingState === 'same_day') return { label: 'Shop Market Now', short: '🌿 Shop Now', color: 'var(--orange)', to: '/market' }
+    if (orderingState === 'preorder') return { label: 'Pre-order Now', short: '🌅 Pre-order Now', color: 'var(--green)', to: '/market' }
+    return { label: `Next: ${nextMarket.name}`, short: null, color: 'var(--green)', to: null }
   }
-  const heroCTA = getHeroCTA()
-
-  function getStickyLabel() {
-    if (orderingState === 'same_day') return '🌿 Shop Market Now'
-    return '🌅 Pre-order Now'
-  }
+  const cta = getCTA()
 
   function getHeroSubtitle() {
-    if (todayMarket && orderOpen) return `${todayMarket.name.toUpperCase()} IS LIVE TODAY`
-    if (todayMarket && !orderOpen) return `${todayMarket.name.toUpperCase()} • ORDERS CLOSED`
-    if (preorderOpen && tomorrowMarket) return `PRE-ORDER OPEN • ${tomorrowMarket.name.toUpperCase()} TOMORROW`
-    if (listingVisible && tomorrowMarket) return `LISTINGS LIVE • ${tomorrowMarket.name.toUpperCase()} TOMORROW`
+    if (todayMarket && orderOpen) return `🌿 ${todayMarket.name.toUpperCase()} IS LIVE TODAY`
+    if (todayMarket && !orderOpen) return `${todayMarket.name.toUpperCase()} • ORDERS CLOSED FOR TODAY`
+    if (preorderOpen && tomorrowMarket) return `🌅 PRE-ORDER OPEN • ${tomorrowMarket.name.toUpperCase()} TOMORROW`
+    if (listingVisible && tomorrowMarket) return `📋 LISTINGS LIVE • ${tomorrowMarket.name.toUpperCase()} TOMORROW`
     return `NEXT: ${nextMarket.name.toUpperCase()} — ${formatMarketDate(nextDate).toUpperCase()}`
+  }
+
+  // ── Status banner — ONE banner, one message, one CTA ──
+  function StatusBanner() {
+    // Market day — orders open
+    if (todayMarket && orderOpen) {
+      return (
+        <div style={{ background: 'var(--orange)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <div style={{ color: 'white', fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 2 }}>🌿 MARKET IS LIVE</div>
+            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13 }}>{todayMarket.name} — order before 10AM</div>
+          </div>
+          <Link to="/market" style={{ background: 'white', color: 'var(--orange)', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', textDecoration: 'none' }}>
+            Shop Now →
+          </Link>
+        </div>
+      )
+    }
+
+    // Market day — orders closed
+    if (todayMarket && !orderOpen) {
+      return (
+        <div style={{ background: 'var(--green)', padding: '12px 16px' }}>
+          <div style={{ color: 'var(--green-muted)', fontSize: 13 }}>
+            🌿 <strong style={{ color: 'white' }}>{todayMarket.name}</strong> — same-day orders closed
+            {preorderOpen && tomorrowMarket && (
+              <span> · <Link to="/market" style={{ color: 'var(--gold)', fontWeight: 700 }}>Pre-order {tomorrowMarket.name} →</Link></span>
+            )}
+          </div>
+        </div>
+      )
+    }
+
+    // Pre-order window open
+    if (preorderOpen && tomorrowMarket) {
+      return (
+        <div style={{ background: 'linear-gradient(90deg, #2D6A4F, var(--green))', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ color: 'var(--gold)', fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 2 }}>🌅 PRE-ORDER OPEN</div>
+            <div style={{ color: 'white', fontSize: 13 }}>{tomorrowMarket.name} tomorrow — order tonight, picked fresh at 5AM</div>
+          </div>
+          <Link to="/market" style={{ background: 'var(--orange)', color: 'white', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', textDecoration: 'none' }}>
+            Pre-order →
+          </Link>
+        </div>
+      )
+    }
+
+    // Listings visible but pre-order not yet open
+    if (listingVisible && tomorrowMarket && currentHour >= TIMING.LISTING_OPEN_HOUR) {
+      return (
+        <div style={{ background: 'rgba(27,67,50,0.08)', borderBottom: '1px solid var(--cream-dark)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Clock size={14} color="var(--green)" />
+          <div style={{ fontSize: 13, color: 'var(--green)' }}>
+            <strong>{tomorrowMarket.name}</strong> listings are live — pre-orders open at 6PM tonight
+          </div>
+        </div>
+      )
+    }
+
+    // Rest day
+    return (
+      <div style={{ background: 'var(--charcoal)', padding: '12px 16px' }}>
+        <div style={{ color: 'white', fontSize: 13, fontWeight: 600, marginBottom: 2 }}>🌙 The market is quiet today</div>
+        <div style={{ color: '#aaa', fontSize: 12 }}>
+          Next: <strong style={{ color: 'var(--gold)' }}>{nextMarket.name}</strong> — {formatMarketDate(nextDate)}
+        </div>
+        <div style={{ color: 'var(--green-muted)', fontSize: 11, marginTop: 2 }}>Listings & pre-orders open at 12PM the day before</div>
+      </div>
+    )
   }
 
   return (
@@ -205,127 +271,43 @@ export default function Home() {
       {showPopup && <MarketDayPopup onClose={() => setShowPopup(false)} />}
       <Navbar />
 
-      {/* ── STICKY PRE-ORDER BUTTON ── */}
-      {/* Sits above bottom nav (60px), fades in after slideshow */}
       <style>{`
         @keyframes fadeSlideUp {
           from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      {canOrder && showStickyBtn && (
+
+      {/* ── ONE sticky CTA — only when ordering is open ── */}
+      {canOrder && showStickyBtn && cta.short && (
         <div style={{
-          position: 'fixed',
-          bottom: 68,          /* sits just above the 60px bottom nav */
-          left: 16,
-          right: 16,
-          zIndex: 95,
-          animation: 'fadeSlideUp 0.3s ease forwards',
-          pointerEvents: 'auto',
+          position: 'fixed', bottom: 68, left: 16, right: 16,
+          zIndex: 95, animation: 'fadeSlideUp 0.3s ease forwards',
         }}>
-          <Link
-            to="/market"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-              background: orderingState === 'same_day'
-                ? 'var(--orange)'
-                : 'var(--green)',
-              color: 'white',
-              borderRadius: 14,
-              padding: '15px 24px',
-              fontSize: 16,
-              fontWeight: 700,
-              textDecoration: 'none',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-              letterSpacing: 0.3,
-            }}
-          >
+          <Link to="/market" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            background: cta.color, color: 'white', borderRadius: 14,
+            padding: '15px 24px', fontSize: 16, fontWeight: 700,
+            textDecoration: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+          }}>
             <ShoppingBasket size={20} />
-            {getStickyLabel()}
+            {cta.short}
           </Link>
         </div>
       )}
 
       <CountdownBanner />
 
-      {/* Pre-order banner */}
-      {preorderOpen && tomorrowMarket && !orderOpen && (
-        <div style={{
-          background: 'linear-gradient(90deg, #2D6A4F, var(--green))',
-          /* FIX 1: match padding-left to WeatherBanner's 16px */
-          padding: '12px 16px',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
-        }}>
-          <div>
-            <div style={{ color: 'var(--gold)', fontSize: 11, fontWeight: 600, letterSpacing: 1, marginBottom: 2 }}>
-              🌅 PRE-ORDER NOW OPEN
-            </div>
-            <div style={{ color: 'white', fontSize: 13, fontWeight: 500 }}>
-              {tomorrowMarket.name} is tomorrow — order tonight, picked fresh at 5AM
-            </div>
-          </div>
-          <Link to="/market" style={{
-            background: 'var(--orange)', color: 'white',
-            borderRadius: 8, padding: '8px 16px',
-            fontSize: 13, fontWeight: 600,
-            whiteSpace: 'nowrap', textDecoration: 'none',
-          }}>
-            Pre-order →
-          </Link>
-        </div>
-      )}
+      {/* ── ONE status banner ── */}
+      <StatusBanner />
 
-      {/* Listings live banner */}
-      {listingVisible && !preorderOpen && !todayMarket && tomorrowMarket && currentHour >= TIMING.LISTING_OPEN_HOUR && (
-        <div style={{
-          background: 'rgba(27,67,50,0.08)',
-          borderBottom: '1px solid var(--cream-dark)',
-          /* FIX 1: consistent 16px left padding */
-          padding: '10px 16px',
-          display: 'flex', alignItems: 'center', gap: 10,
-        }}>
-          <Clock size={14} color="var(--green)" />
-          <div style={{ fontSize: 13, color: 'var(--green)' }}>
-            <strong>{tomorrowMarket.name}</strong> listings are live — pre-orders open at 6PM tonight
-          </div>
-        </div>
-      )}
-
-      {/* Rest day banner */}
-      {!listingVisible && !todayMarket && (
-        <div style={{
-          background: 'var(--charcoal)',
-          /* FIX 1: consistent 16px left padding */
-          padding: '12px 16px',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', gap: 12,
-        }}>
-          <div>
-            <div style={{ color: 'white', fontSize: 13, fontWeight: 600, marginBottom: 2 }}>
-              🌙 The market is quiet today
-            </div>
-            <div style={{ color: '#aaa', fontSize: 12 }}>
-              Next: <strong style={{ color: 'var(--gold)' }}>{nextMarket.name}</strong> — {formatMarketDate(nextDate)}
-            </div>
-            <div style={{ color: 'var(--green-muted)', fontSize: 11, marginTop: 2 }}>
-              Listings & pre-orders open at 12PM the day before
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Market slideshow — observed for sticky button */}
+      {/* Slideshow */}
       <MarketSlideshow slideshowRef={slideshowRef} />
 
-      {/* Hero section */}
+      {/* Hero */}
       <div style={{
         background: 'linear-gradient(160deg, var(--green) 0%, var(--green-light) 60%, #40916C 100%)',
-        padding: '36px 24px 48px',
-        position: 'relative', overflow: 'hidden',
+        padding: '36px 24px 48px', position: 'relative', overflow: 'hidden',
       }}>
         <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
         <div style={{ position: 'relative', maxWidth: 480, margin: '0 auto' }}>
@@ -333,10 +315,9 @@ export default function Home() {
             {getHeroSubtitle()}
           </div>
           <h1 style={{
-            fontFamily: 'Playfair Display, serif',
-            color: 'white',
-            fontSize: 'clamp(28px, 7vw, 48px)',
-            fontWeight: 900, lineHeight: 1.25, marginBottom: 14,
+            fontFamily: 'Playfair Display, serif', color: 'white',
+            fontSize: 'clamp(28px, 7vw, 48px)', fontWeight: 900,
+            lineHeight: 1.25, marginBottom: 14,
           }}>
             Fresh from the<br />
             <span style={{ color: 'var(--gold)' }}>village.</span><br />
@@ -345,20 +326,25 @@ export default function Home() {
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 15, lineHeight: 1.6, marginBottom: 24, maxWidth: 380 }}>
             Fresh farm produce from traditional village markets — delivered directly to city buyers. No middlemen. No markup. Just fresh.
           </p>
+
+          {/* ── ONE hero CTA button ── */}
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            {orderingState !== 'browse_only' ? (
-              <Link to="/market" className="btn-primary" style={{ fontSize: 15, padding: '13px 24px' }}>
-                {heroCTA.icon}{heroCTA.label}
+            {cta.to ? (
+              <Link to={cta.to} className="btn-primary" style={{ fontSize: 15, padding: '13px 24px' }}>
+                <ShoppingBasket size={20} />
+                {cta.label}
               </Link>
             ) : (
               <button className="btn-primary" style={{ fontSize: 15, padding: '13px 24px' }} onClick={() => setShowPopup(true)}>
-                {heroCTA.icon}{heroCTA.label}
+                <Bell size={20} />
+                {cta.label}
               </button>
             )}
             <Link to="/market" className="btn-secondary" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', fontSize: 14 }}>
               Browse Products
             </Link>
           </div>
+
           <div style={{ display: 'flex', gap: 20, marginTop: 24, flexWrap: 'wrap' }}>
             {[
               { icon: '🌿', text: 'Farm fresh' },
@@ -373,33 +359,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Active market card */}
-      {(todayMarket || (preorderOpen && tomorrowMarket)) && (
-        <div style={{ padding: '0 16px', marginTop: -20 }}>
-          <div style={{
-            background: 'white', borderRadius: 16, padding: '20px',
-            boxShadow: 'var(--shadow-lg)',
-            borderLeft: `4px solid ${orderingState === 'same_day' ? 'var(--orange)' : 'var(--gold)'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-          }}>
-            <div>
-              <div style={{ fontSize: 12, color: orderingState === 'same_day' ? 'var(--orange)' : 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>
-                {orderingState === 'same_day' ? '🌿 OPEN NOW' : '🌅 PRE-ORDER OPEN'}
-              </div>
-              <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700 }}>
-                {todayMarket?.name || tomorrowMarket?.name}
-              </div>
-              <div style={{ fontSize: 13, color: '#666' }}>
-                {todayMarket?.location || tomorrowMarket?.location}
-              </div>
-            </div>
-            <Link to="/market" className="btn-primary" style={{ whiteSpace: 'nowrap', padding: '12px 20px', textDecoration: 'none' }}>
-              {orderingState === 'same_day' ? 'Shop Now' : 'Pre-order'}
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-        </div>
-      )}
+      {/* ── Active market card removed — status banner above already covers this ── */}
 
       {/* Categories */}
       <div style={{ padding: '36px 16px 0' }}>
@@ -468,7 +428,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Nne AI + Ahia Quiz */}
+      {/* Nne AI + Quiz */}
       <div style={{ padding: '36px 16px 0' }}>
         <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, marginBottom: 6 }}>
           Explore between market days
@@ -477,21 +437,14 @@ export default function Home() {
           Something for every day — not just market days
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Link to="/nne" style={{
-            background: 'var(--green)', borderRadius: 14, padding: '20px',
-            display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none',
-          }}>
+          <Link to="/nne" style={{ background: 'var(--green)', borderRadius: 14, padding: '20px', display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none' }}>
             <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🌿</div>
             <div>
               <div style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 2 }}>Ask Nne</div>
               <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>Your AI market guide — market days, products, Igbo cooking</div>
             </div>
           </Link>
-          <Link to="/quiz" style={{
-            background: 'linear-gradient(135deg, #9B7E46, #C0522B)',
-            borderRadius: 14, padding: '20px',
-            display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none',
-          }}>
+          <Link to="/quiz" style={{ background: 'linear-gradient(135deg, #9B7E46, #C0522B)', borderRadius: 14, padding: '20px', display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none' }}>
             <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🏪</div>
             <div>
               <div style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 2 }}>Ahịa Quiz</div>
