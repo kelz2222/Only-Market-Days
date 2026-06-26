@@ -136,11 +136,10 @@ export default function NneAI() {
     setMessages(updatedMessages)
     setLoading(true)
 
-    // ── DEBUG: show key status on screen ──
     if (!GEMINI_KEY) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: '⚠️ DEBUG: VITE_GEMINI_API_KEY is not set. Check Vercel environment variables and make sure you redeployed after adding it.',
+        content: '⚠️ VITE_GEMINI_API_KEY is not set. Check Vercel environment variables.',
       }])
       setLoading(false)
       return
@@ -162,8 +161,9 @@ export default function NneAI() {
         { role: 'user', parts: [{ text: userMessage }] }
       ]
 
+      // ✅ Fixed model name — gemini-2.0-flash
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -182,12 +182,11 @@ export default function NneAI() {
 
       const data = await response.json()
 
-      // ── DEBUG: show exact API error on screen ──
       if (!response.ok) {
         const errMsg = data.error?.message || JSON.stringify(data)
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `⚠️ DEBUG — Gemini API error ${response.status}:\n${errMsg}`,
+          content: `⚠️ Gemini error ${response.status}:\n${errMsg}`,
         }])
         setLoading(false)
         return
@@ -197,7 +196,7 @@ export default function NneAI() {
       if (!reply) {
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `⚠️ DEBUG — No text in response:\n${JSON.stringify(data).slice(0, 300)}`,
+          content: `⚠️ No response from Gemini:\n${JSON.stringify(data).slice(0, 300)}`,
         }])
         setLoading(false)
         return
@@ -206,10 +205,9 @@ export default function NneAI() {
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
 
     } catch (err) {
-      // ── DEBUG: show exact exception on screen ──
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `⚠️ DEBUG — Exception:\n${err.message}\n\nKey exists: ${!!GEMINI_KEY}\nKey starts with: ${GEMINI_KEY?.slice(0, 6)}...`,
+        content: `⚠️ Error: ${err.message}`,
       }])
     }
 
@@ -277,8 +275,13 @@ export default function NneAI() {
               background: 'rgba(116,198,157,0.2)',
               borderRadius: 20, padding: '4px 10px',
             }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
-              <span style={{ color: 'var(--green-muted)', fontSize: 11, fontWeight: 600 }}>
+              <div style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: '#4ade80',
+              }} />
+              <span style={{
+                color: 'var(--green-muted)', fontSize: 11, fontWeight: 600,
+              }}>
                 Online
               </span>
             </div>
@@ -324,7 +327,10 @@ export default function NneAI() {
         ))}
 
         {loading && (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12 }}>
+          <div style={{
+            display: 'flex', alignItems: 'flex-end',
+            gap: 8, marginBottom: 12,
+          }}>
             <div style={{
               width: 32, height: 32, borderRadius: '50%',
               background: 'linear-gradient(135deg, #D4A017, #F7B731)',
