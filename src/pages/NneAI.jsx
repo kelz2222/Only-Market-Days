@@ -9,7 +9,7 @@ import {
   getOrderingState,
 } from '../lib/marketCalendar'
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY
+const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY
 
 function buildSystemPrompt() {
   const now = new Date()
@@ -136,46 +136,38 @@ export default function NneAI() {
     setMessages(updatedMessages)
     setLoading(true)
 
-    if (!GEMINI_KEY) {
+    if (!GROQ_KEY) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: '⚠️ VITE_GEMINI_API_KEY is not set. Check Vercel environment variables.',
+        content: '⚠️ VITE_GROQ_API_KEY is not set. Check Vercel environment variables.',
       }])
       setLoading(false)
       return
     }
 
     try {
-      const systemPrompt = buildSystemPrompt()
-
-      const history = updatedMessages
-        .slice(0, -1)
+      // Build message history for Groq
+      // Groq uses OpenAI-compatible format — system + messages array
+      const conversationMessages = updatedMessages
         .filter((_, i) => !(i === 0 && updatedMessages[0].role === 'assistant'))
-        .map(m => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }],
-        }))
+        .map(m => ({ role: m.role, content: m.content }))
 
-      const contents = [
-        ...history,
-        { role: 'user', parts: [{ text: userMessage }] }
-      ]
-
-      // ✅ Fixed model name — gemini-2.0-flash
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+        'https://api.groq.com/openai/v1/chat/completions',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${GROQ_KEY}`,
+          },
           body: JSON.stringify({
-            system_instruction: {
-              parts: [{ text: systemPrompt }]
-            },
-            contents,
-            generationConfig: {
-              maxOutputTokens: 1000,
-              temperature: 0.7,
-            },
+            model: 'llama-3.3-70b-versatile',
+            max_tokens: 1000,
+            temperature: 0.7,
+            messages: [
+              { role: 'system', content: buildSystemPrompt() },
+              ...conversationMessages,
+            ],
           }),
         }
       )
@@ -186,17 +178,17 @@ export default function NneAI() {
         const errMsg = data.error?.message || JSON.stringify(data)
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `⚠️ Gemini error ${response.status}:\n${errMsg}`,
+          content: `⚠️ Groq error ${response.status}:\n${errMsg}`,
         }])
         setLoading(false)
         return
       }
 
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
+      const reply = data.choices?.[0]?.message?.content
       if (!reply) {
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `⚠️ No response from Gemini:\n${JSON.stringify(data).slice(0, 300)}`,
+          content: `⚠️ No response from Groq:\n${JSON.stringify(data).slice(0, 300)}`,
         }])
         setLoading(false)
         return
