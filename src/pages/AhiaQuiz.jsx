@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Trophy, RotateCcw, Share2, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Trophy, RotateCcw, Share2, ChevronRight, ShoppingBasket } from 'lucide-react'
 import Navbar from '../components/Navbar'
 
-// ============================================
-// QUIZ QUESTIONS — Igbo market culture,
-// food, history, and Only Market Days
-// ============================================
 const ALL_QUESTIONS = [
-  // Market culture
   {
     id: 1,
     category: 'Market Culture',
@@ -54,7 +49,6 @@ const ALL_QUESTIONS = [
     answer: 2,
     explanation: '"Nne" means mother in Igbo. It is a term of endearment and respect. The Only Market Days AI assistant is named Nne.',
   },
-  // Food & produce
   {
     id: 6,
     category: 'Village Produce',
@@ -109,7 +103,6 @@ const ALL_QUESTIONS = [
     answer: 1,
     explanation: 'Fresh corn peaks May to August during the rainy season in Southeast Nigeria. At village markets during this period, you can buy at farm gate price — sometimes 50% cheaper than city retailers.',
   },
-  // Cooking
   {
     id: 12,
     category: 'Igbo Cooking',
@@ -146,7 +139,6 @@ const ALL_QUESTIONS = [
     answer: 1,
     explanation: 'Uziza has a distinctive peppery, slightly bitter flavour. It is used in pepper soup, ofe onugbu, and other dishes. The seeds are also used as a spice.',
   },
-  // Only Market Days
   {
     id: 16,
     category: 'Only Market Days',
@@ -194,13 +186,11 @@ const ALL_QUESTIONS = [
   },
 ]
 
-// Shuffle and pick N questions
 function getQuizQuestions(n = 10) {
   const shuffled = [...ALL_QUESTIONS].sort(() => Math.random() - 0.5)
   return shuffled.slice(0, n)
 }
 
-// Category colors
 const CATEGORY_COLORS = {
   'Market Culture': { bg: 'rgba(27,67,50,0.1)', color: 'var(--green)', border: 'var(--green-muted)' },
   'Village Produce': { bg: 'rgba(212,160,23,0.1)', color: '#8B6914', border: 'var(--gold)' },
@@ -209,7 +199,7 @@ const CATEGORY_COLORS = {
 }
 
 export default function AhiaQuiz() {
-  const [screen, setScreen] = useState('intro') // intro | quiz | result
+  const [screen, setScreen] = useState('intro')
   const [questions, setQuestions] = useState([])
   const [current, setCurrent] = useState(0)
   const [selected, setSelected] = useState(null)
@@ -219,11 +209,10 @@ export default function AhiaQuiz() {
   const [timeLeft, setTimeLeft] = useState(20)
   const [timerActive, setTimerActive] = useState(false)
 
-  // Timer countdown
   useEffect(() => {
     if (!timerActive || answered) return
     if (timeLeft <= 0) {
-      handleAnswer(null) // Time up — counts as wrong
+      handleAnswer(null)
       return
     }
     const id = setTimeout(() => setTimeLeft(t => t - 1), 1000)
@@ -248,10 +237,8 @@ export default function AhiaQuiz() {
     setAnswered(true)
     setSelected(optionIndex)
     setTimerActive(false)
-
     const q = questions[current]
     const isCorrect = optionIndex === q.answer
-
     if (isCorrect) setScore(s => s + 1)
     setAnswers(prev => [...prev, { questionId: q.id, selected: optionIndex, correct: isCorrect }])
   }
@@ -277,51 +264,33 @@ export default function AhiaQuiz() {
     return { title: 'Nno! Welcome to learning!', sub: 'No worries — every quiz teaches you something new. Try again!', emoji: '🌱' }
   }
 
+  // ── INTRO ──
   if (screen === 'intro') {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--cream)', paddingBottom: 80 }}>
         <Navbar />
-
         <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 16px' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green)', fontSize: 13, marginBottom: 20 }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green)', fontSize: 13, marginBottom: 20, textDecoration: 'none' }}>
             <ArrowLeft size={15} /> Back
           </Link>
-
-          {/* Hero */}
-          <div style={{
-            background: 'linear-gradient(135deg, var(--green) 0%, #2D6A4F 100%)',
-            borderRadius: 20, padding: '32px 24px',
-            textAlign: 'center', marginBottom: 24,
-          }}>
+          <div style={{ background: 'linear-gradient(135deg, var(--green) 0%, #2D6A4F 100%)', borderRadius: 20, padding: '32px 24px', textAlign: 'center', marginBottom: 24 }}>
             <div style={{ fontSize: 64, marginBottom: 12 }}>🏪</div>
-            <h1 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 32, fontWeight: 900, marginBottom: 4 }}>
-              Ahịa Quiz
-            </h1>
-            <div style={{ color: 'var(--gold)', fontSize: 13, letterSpacing: 2, marginBottom: 16 }}>
-              IGBO MARKET & CULTURE CHALLENGE
-            </div>
+            <h1 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 32, fontWeight: 900, marginBottom: 4 }}>Ahịa Quiz</h1>
+            <div style={{ color: 'var(--gold)', fontSize: 13, letterSpacing: 2, marginBottom: 16 }}>IGBO MARKET & CULTURE CHALLENGE</div>
             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>
               Test your knowledge of Igbo market culture, traditional foods, village produce, and the Only Market Days platform.
             </p>
           </div>
-
-          {/* Categories */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 13, color: '#888', marginBottom: 12, fontWeight: 600 }}>QUIZ COVERS</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {Object.entries(CATEGORY_COLORS).map(([cat, style]) => (
-                <div key={cat} style={{
-                  background: style.bg,
-                  border: `1px solid ${style.border}`,
-                  borderRadius: 10, padding: '10px 12px',
-                }}>
+                <div key={cat} style={{ background: style.bg, border: `1px solid ${style.border}`, borderRadius: 10, padding: '10px 12px' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: style.color }}>{cat}</div>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Rules */}
           <div className="card" style={{ padding: '16px', marginBottom: 24 }}>
             {[
               { icon: '❓', text: '10 random questions per game' },
@@ -335,7 +304,6 @@ export default function AhiaQuiz() {
               </div>
             ))}
           </div>
-
           <button onClick={startQuiz} className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '18px', fontSize: 17 }}>
             Start Quiz — Ahịa!
           </button>
@@ -344,8 +312,13 @@ export default function AhiaQuiz() {
     )
   }
 
+  // ── QUIZ ──
   if (screen === 'quiz') {
     const q = questions[current]
+
+    // Guard — if questions not loaded yet
+    if (!q) return null
+
     const catStyle = CATEGORY_COLORS[q.category] || CATEGORY_COLORS['Market Culture']
     const timerPct = (timeLeft / 20) * 100
     const timerColor = timeLeft > 10 ? 'var(--green)' : timeLeft > 5 ? 'var(--gold)' : 'var(--orange)'
@@ -353,123 +326,67 @@ export default function AhiaQuiz() {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--cream)', paddingBottom: 40 }}>
         <Navbar />
-
         <div style={{ maxWidth: 480, margin: '0 auto', padding: '16px' }}>
-          {/* Progress bar */}
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888', marginBottom: 6 }}>
               <span>Question {current + 1} of {questions.length}</span>
-              <span style={{ fontFamily: 'DM Mono, monospace', color: timerColor, fontWeight: 700 }}>
-                {timeLeft}s
-              </span>
+              <span style={{ fontFamily: 'DM Mono, monospace', color: timerColor, fontWeight: 700 }}>{timeLeft}s</span>
             </div>
-            {/* Progress */}
             <div style={{ height: 4, background: 'var(--cream-dark)', borderRadius: 2, overflow: 'hidden', marginBottom: 6 }}>
-              <div style={{ height: '100%', background: 'var(--green)', borderRadius: 2, width: `${((current) / questions.length) * 100}%`, transition: 'width 0.3s' }} />
+              <div style={{ height: '100%', background: 'var(--green)', borderRadius: 2, width: `${(current / questions.length) * 100}%`, transition: 'width 0.3s' }} />
             </div>
-            {/* Timer */}
             <div style={{ height: 3, background: 'var(--cream-dark)', borderRadius: 2, overflow: 'hidden' }}>
               <div style={{ height: '100%', background: timerColor, borderRadius: 2, width: `${timerPct}%`, transition: 'width 1s linear, background 0.3s' }} />
             </div>
           </div>
 
-          {/* Question card */}
           <div className="card" style={{ padding: '24px', marginBottom: 16 }}>
-            {/* Category badge */}
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: catStyle.bg, border: `1px solid ${catStyle.border}`, borderRadius: 20, padding: '4px 12px', marginBottom: 16 }}>
               <span>{q.emoji}</span>
               <span style={{ fontSize: 11, fontWeight: 700, color: catStyle.color }}>{q.category}</span>
             </div>
-
             <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700, lineHeight: 1.4, marginBottom: 20, color: 'var(--charcoal)' }}>
               {q.question}
             </h2>
-
-            {/* Options */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {q.options.map((option, i) => {
                 let bg = 'white'
                 let border = 'var(--cream-dark)'
                 let color = 'var(--charcoal)'
                 let icon = null
-
                 if (answered) {
-                  if (i === q.answer) {
-                    bg = 'rgba(34,197,94,0.1)'
-                    border = '#22c55e'
-                    color = '#15803d'
-                    icon = '✅'
-                  } else if (i === selected && i !== q.answer) {
-                    bg = 'rgba(232,93,4,0.08)'
-                    border = 'var(--orange)'
-                    color = 'var(--orange)'
-                    icon = '❌'
-                  }
-                } else if (selected === i) {
-                  bg = 'rgba(27,67,50,0.08)'
-                  border = 'var(--green)'
-                }
-
+                  if (i === q.answer) { bg = 'rgba(34,197,94,0.1)'; border = '#22c55e'; color = '#15803d'; icon = '✅' }
+                  else if (i === selected && i !== q.answer) { bg = 'rgba(232,93,4,0.08)'; border = 'var(--orange)'; color = 'var(--orange)'; icon = '❌' }
+                } else if (selected === i) { bg = 'rgba(27,67,50,0.08)'; border = 'var(--green)' }
                 return (
-                  <button
-                    key={i}
-                    onClick={() => !answered && handleAnswer(i)}
-                    style={{
-                      padding: '14px 16px',
-                      borderRadius: 10,
-                      border: `2px solid ${border}`,
-                      background: bg,
-                      color,
-                      fontSize: 14,
-                      fontWeight: answered && i === q.answer ? 600 : 400,
-                      textAlign: 'left',
-                      cursor: answered ? 'default' : 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 10,
-                      transition: 'all 0.2s',
-                      fontFamily: 'DM Sans, sans-serif',
-                    }}
-                  >
+                  <button key={i} onClick={() => !answered && handleAnswer(i)} style={{
+                    padding: '14px 16px', borderRadius: 10,
+                    border: `2px solid ${border}`, background: bg, color,
+                    fontSize: 14, fontWeight: answered && i === q.answer ? 600 : 400,
+                    textAlign: 'left', cursor: answered ? 'default' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    gap: 10, transition: 'all 0.2s', fontFamily: 'DM Sans, sans-serif',
+                  }}>
                     <span>{option}</span>
                     {icon && <span style={{ fontSize: 16, flexShrink: 0 }}>{icon}</span>}
                   </button>
                 )
               })}
             </div>
-
-            {/* Explanation */}
             {answered && (
-              <div style={{
-                marginTop: 16,
-                background: 'rgba(27,67,50,0.06)',
-                border: '1px solid var(--green-muted)',
-                borderRadius: 10,
-                padding: '12px 14px',
-                animation: 'fadeIn 0.3s ease',
-              }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', marginBottom: 4 }}>
-                  💡 Did you know?
-                </div>
-                <div style={{ fontSize: 13, color: '#555', lineHeight: 1.5 }}>
-                  {q.explanation}
-                </div>
+              <div style={{ marginTop: 16, background: 'rgba(27,67,50,0.06)', border: '1px solid var(--green-muted)', borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', marginBottom: 4 }}>💡 Did you know?</div>
+                <div style={{ fontSize: 13, color: '#555', lineHeight: 1.5 }}>{q.explanation}</div>
               </div>
             )}
           </div>
 
-          {/* Score pill */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <div style={{ background: 'white', borderRadius: 20, padding: '6px 14px', boxShadow: 'var(--shadow)', fontSize: 13, color: 'var(--green)', fontWeight: 600 }}>
               Score: {score}/{current + (answered ? 1 : 0)}
             </div>
             {answered && (
-              <button
-                onClick={nextQuestion}
-                className="btn-primary"
-                style={{ padding: '10px 20px', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}
-              >
+              <button onClick={nextQuestion} className="btn-primary" style={{ padding: '10px 20px', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
                 {current + 1 >= questions.length ? 'See Results' : 'Next'}
                 <ChevronRight size={16} />
               </button>
@@ -480,30 +397,40 @@ export default function AhiaQuiz() {
     )
   }
 
+  // ── RESULTS ──
   if (screen === 'result') {
+    // Guard — if somehow questions is empty
+    if (!questions.length) {
+      return (
+        <div style={{ minHeight: '100vh', background: 'var(--cream)', paddingBottom: 80 }}>
+          <Navbar />
+          <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 16px', textAlign: 'center' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
+            <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, marginBottom: 16 }}>Something went wrong</h2>
+            <button onClick={startQuiz} className="btn-primary" style={{ justifyContent: 'center' }}>
+              <RotateCcw size={18} /> Try Again
+            </button>
+          </div>
+        </div>
+      )
+    }
+
     const result = getResultMessage(score, questions.length)
     const pct = Math.round((score / questions.length) * 100)
 
     return (
       <div style={{ minHeight: '100vh', background: 'var(--cream)', paddingBottom: 80 }}>
         <Navbar />
-
         <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 16px' }}>
+
           {/* Result hero */}
-          <div style={{
-            background: 'linear-gradient(135deg, var(--green), #2D6A4F)',
-            borderRadius: 20, padding: '32px 24px',
-            textAlign: 'center', marginBottom: 24,
-          }}>
+          <div style={{ background: 'linear-gradient(135deg, var(--green), #2D6A4F)', borderRadius: 20, padding: '32px 24px', textAlign: 'center', marginBottom: 24 }}>
             <div style={{ fontSize: 64, marginBottom: 12 }}>{result.emoji}</div>
             <h1 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
               {result.title}
             </h1>
-
-            {/* Score circle */}
             <div style={{
-              width: 90, height: 90,
-              borderRadius: '50%',
+              width: 90, height: 90, borderRadius: '50%',
               background: 'rgba(255,255,255,0.15)',
               border: '3px solid rgba(255,255,255,0.3)',
               display: 'flex', flexDirection: 'column',
@@ -513,20 +440,13 @@ export default function AhiaQuiz() {
               <div style={{ fontFamily: 'DM Mono, monospace', color: 'white', fontSize: 28, fontWeight: 900, lineHeight: 1 }}>
                 {score}
               </div>
-              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>
-                of {questions.length}
-              </div>
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>of {questions.length}</div>
             </div>
-
-            <div style={{ color: 'var(--gold)', fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
-              {pct}%
-            </div>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>
-              {result.sub}
-            </p>
+            <div style={{ color: 'var(--gold)', fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{pct}%</div>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{result.sub}</p>
           </div>
 
-          {/* Question review */}
+          {/* Answer review */}
           <div className="card" style={{ padding: '20px', marginBottom: 20 }}>
             <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 14 }}>
               Your Answers
@@ -547,7 +467,10 @@ export default function AhiaQuiz() {
                       {q.question}
                     </div>
                     <div style={{ fontSize: 12, color: a?.correct ? '#15803d' : 'var(--orange)' }}>
-                      {a?.correct ? `✓ ${q.options[q.answer]}` : `✗ You said: ${a?.selected !== null && a?.selected !== undefined ? q.options[a.selected] : 'Time up'}`}
+                      {a?.correct
+                        ? `✓ ${q.options[q.answer]}`
+                        : `✗ You said: ${a?.selected !== null && a?.selected !== undefined ? q.options[a.selected] : 'Time up'}`
+                      }
                     </div>
                     {!a?.correct && (
                       <div style={{ fontSize: 12, color: '#15803d', marginTop: 2 }}>
@@ -566,7 +489,7 @@ export default function AhiaQuiz() {
               <RotateCcw size={18} />
               Play Again
             </button>
-            <Link to="/market" className="btn-secondary" style={{ justifyContent: 'center', padding: '14px' }}>
+            <Link to="/market" className="btn-secondary" style={{ justifyContent: 'center', padding: '14px', textDecoration: 'none' }}>
               <ShoppingBasket size={16} />
               Shop the Market
             </Link>
@@ -580,7 +503,12 @@ export default function AhiaQuiz() {
                   })
                 }
               }}
-              style={{ background: 'white', border: '1.5px solid var(--cream-dark)', borderRadius: 8, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: '#555', cursor: 'pointer' }}
+              style={{
+                background: 'white', border: '1.5px solid var(--cream-dark)',
+                borderRadius: 8, padding: '14px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: 8, fontSize: 14, fontWeight: 600, color: '#555', cursor: 'pointer',
+              }}
             >
               <Share2 size={16} />
               Share my score
