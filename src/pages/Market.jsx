@@ -653,11 +653,13 @@ export default function Market() {
         </div>
       ) : (
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-          gap: 14, padding: '0 16px',
-          maxWidth: 700, margin: '0 auto',
-        }}>
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, 1fr)',
+  gap: 12,
+  padding: '0 16px',
+  maxWidth: 700,
+  margin: '0 auto',
+}}>
           {filtered.map(product => (
             <ProductCard
               key={product.id}
