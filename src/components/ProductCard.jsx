@@ -1,4 +1,4 @@
-import { ShoppingBasket, Leaf, Flame } from 'lucide-react'
+import { ShoppingBasket, Leaf, Flame, Fish } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { formatNaira } from '../lib/paystack'
 import toast from 'react-hot-toast'
@@ -14,6 +14,23 @@ const CATEGORY_EMOJI = {
   seasonal: '🍊',
   nuts: '🌰',
   grains: '🌽',
+}
+
+// Category-aware subtitle — no more "Harvested this morning" on palm oil
+function getFreshLabel(categorySlug, isMeat) {
+  if (isMeat) return 'Processed fresh on market day'
+  switch (categorySlug) {
+    case 'vegetables': return 'Harvested this morning'
+    case 'fruits':
+    case 'seasonal': return 'Picked this morning'
+    case 'grains': return 'Harvested fresh'
+    case 'staples': return 'From the village farm'
+    case 'palm': return 'Pressed this week'
+    case 'protein': return 'Sun-dried & sorted'
+    case 'spices': return 'Fresh from the farm'
+    case 'nuts': return 'Hand-sorted'
+    default: return 'Fresh from the market'
+  }
 }
 
 const MEAT_SLUGS = ['meat']
@@ -32,6 +49,9 @@ export default function ProductCard({
   const isDisabled = isSoldOut || unavailableToday || orderingState === 'browse_only'
   const placeholderEmoji = CATEGORY_EMOJI[product.category_slug] || '🌿'
 
+  // Category-aware subtitle
+  const freshLabel = getFreshLabel(product.category_slug, isMeat)
+
   function handleAdd() {
     if (isDisabled) return
     if (isHighValue || isMeat) {
@@ -47,7 +67,7 @@ export default function ProductCard({
     if (isSoldOut) return 'Sold out'
     if (orderingState === 'browse_only') return 'Not open yet'
     if (isHighValue || isMeat) return '⚙️ Options'
-    if (inCart) return `In basket (${inCart.qty})`
+    if (inCart) return `(${inCart.qty})`
     if (orderingState === 'preorder') return 'Pre-order'
     return 'Add'
   }
@@ -58,6 +78,13 @@ export default function ProductCard({
     if (inCart) return 'var(--green)'
     if (orderingState === 'preorder') return '#2D6A4F'
     return 'var(--orange)'
+  }
+
+  // Subtitle icon based on category
+  function getSubtitleIcon() {
+    if (isMeat) return <Flame size={10} />
+    if (['protein'].includes(product.category_slug)) return <Fish size={10} />
+    return <Leaf size={10} />
   }
 
   return (
@@ -114,22 +141,20 @@ export default function ProductCard({
           )}
         </div>
 
-        {/* Overlays */}
+        {/* Sold out overlay */}
         {isSoldOut && (
           <div style={{
             position: 'absolute', inset: 0,
             background: 'rgba(0,0,0,0.5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <span style={{
-              color: 'white', fontWeight: 700,
-              fontSize: 14, letterSpacing: 2,
-            }}>
+            <span style={{ color: 'white', fontWeight: 700, fontSize: 14, letterSpacing: 2 }}>
               SOLD OUT
             </span>
           </div>
         )}
 
+        {/* Other market overlay */}
         {unavailableToday && !isSoldOut && (
           <div style={{
             position: 'absolute', inset: 0,
@@ -137,10 +162,7 @@ export default function ProductCard({
             display: 'flex', alignItems: 'center',
             justifyContent: 'center', padding: '0 8px',
           }}>
-            <span style={{
-              color: 'white', fontWeight: 700,
-              fontSize: 11, textAlign: 'center',
-            }}>
+            <span style={{ color: 'white', fontWeight: 700, fontSize: 11, textAlign: 'center' }}>
               {product.market_name} day only
             </span>
           </div>
@@ -156,9 +178,7 @@ export default function ProductCard({
         gap: 5,
       }}>
 
-        {/* ✅ FIX 1 — Clean subtitle */}
-        {/* Only show market name. No hardcoded "Processed fresh this morning" for everything. */}
-        {/* For meat: show flame icon. For crops: show leaf icon. */}
+        {/* Subtitle — market name + category-aware label */}
         <div style={{
           fontSize: 10,
           color: 'var(--green)',
@@ -166,17 +186,12 @@ export default function ProductCard({
           display: 'flex',
           alignItems: 'center',
           gap: 4,
+          flexWrap: 'wrap',
         }}>
-          {isMeat
-            ? <Flame size={10} />
-            : <Leaf size={10} />
-          }
-          {product.market_name || 'Village Market'}
-          {isMeat && (
-            <span style={{ color: '#888', fontWeight: 400 }}>
-              • Processed fresh on market day
-            </span>
-          )}
+          {getSubtitleIcon()}
+          <span>{product.market_name || 'Village Market'}</span>
+          <span style={{ color: '#aaa', fontWeight: 400 }}>•</span>
+          <span style={{ color: '#888', fontWeight: 400 }}>{freshLabel}</span>
         </div>
 
         {/* Product name */}
@@ -184,20 +199,21 @@ export default function ProductCard({
           fontFamily: 'Playfair Display, serif',
           fontSize: 15, fontWeight: 700,
           color: 'var(--charcoal)', lineHeight: 1.2,
+          margin: 0,
         }}>
           {product.name}
         </h3>
 
         {/* Season note */}
         {product.season_note && (
-          <p style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 500 }}>
+          <p style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 500, margin: 0 }}>
             {product.season_note}
           </p>
         )}
 
-        {/* Description */}
-        {product.description && (
-          <p style={{ fontSize: 11, color: '#666', lineHeight: 1.4 }}>
+        {/* Description — only show if no season note to keep cards compact */}
+        {product.description && !product.season_note && (
+          <p style={{ fontSize: 11, color: '#666', lineHeight: 1.4, margin: 0 }}>
             {product.description}
           </p>
         )}
@@ -240,7 +256,7 @@ export default function ProductCard({
               flexShrink: 0,
             }}
           >
-            {!isHighValue && !isMeat && !isDisabled && (
+            {!isHighValue && !isMeat && !isDisabled && inCart && (
               <ShoppingBasket size={12} />
             )}
             {getButtonLabel()}
