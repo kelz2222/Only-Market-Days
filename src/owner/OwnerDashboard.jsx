@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingBag, Users, TrendingUp, LogOut, ArrowRight } from 'lucide-react'
+import { ShoppingBag, Users, TrendingUp, LogOut, ArrowRight, Calendar, CheckCircle, XCircle } from 'lucide-react'
 import { useOwner } from './OwnerApp'
 import { supabase } from '../lib/supabase'
 import { formatNaira } from '../lib/paystack'
@@ -11,49 +11,137 @@ export default function OwnerDashboard() {
   const navigate = useNavigate()
   const [stats, setStats] = useState({ todayOrders: 0, todayRevenue: 0, monthOrders: 0, monthRevenue: 0, totalCustomers: 0 })
   const [recentOrders, setRecentOrders] = useState([])
+  const [markets, setMarkets] = useState([])
+  const [activeMarketDay, setActiveMarketDay] = useState(null)
+  const [activating, setActivating] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+
   const now = new Date()
   const todayMarket = getTodaysMarket(now)
   const { market: nextMarket, date: nextDate } = getNextMarket(now)
 
+  const today = new Date().toISOString().split('T')[0]
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+
   useEffect(() => {
-    async function fetchStats() {
-      const today = new Date().toISOString().split('T')[0]
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-      const [todayRes, monthRes, customersRes, recentRes] = await Promise.all([
-        supabase.from('orders').select('total').gte('created_at', today + 'T00:00:00').in('status', ['paid', 'packed', 'dispatched', 'collected']),
-        supabase.from('orders').select('total').gte('created_at', monthStart).in('status', ['paid', 'packed', 'dispatched', 'collected']),
-        supabase.from('buyer_profiles').select('id', { count: 'exact' }),
-        supabase.from('orders').select('*, pickup_zone:pickup_zones(city, name)').order('created_at', { ascending: false }).limit(5),
-      ])
-      setStats({
-        todayOrders: todayRes.data?.length || 0,
-        todayRevenue: todayRes.data?.reduce((s, o) => s + o.total, 0) || 0,
-        monthOrders: monthRes.data?.length || 0,
-        monthRevenue: monthRes.data?.reduce((s, o) => s + o.total, 0) || 0,
-        totalCustomers: customersRes.count || 0,
-      })
-      setRecentOrders(recentRes.data || [])
-    }
     fetchStats()
+    fetchMarkets()
+    fetchActiveMarketDay()
   }, [])
 
-  const STATUS_COLORS = { paid: '#2D6A4F', packed: '#E85D04', dispatched: '#1B4332', collected: '#74C69D', cancelled: '#999' }
+  async function fetchStats() {
+    const today = new Date().toISOString().split('T')[0]
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+    const [todayRes, monthRes, customersRes, recentRes] = await Promise.all([
+      supabase.from('orders').select('total').gte('created_at', today + 'T00:00:00').in('status', ['paid', 'packed', 'dispatched', 'collected']),
+      supabase.from('orders').select('total').gte('created_at', monthStart).in('status', ['paid', 'packed', 'dispatched', 'collected']),
+      supabase.from('buyer_profiles').select('id', { count: 'exact' }),
+      supabase.from('orders').select('*, pickup_zone:pickup_zones(city, name)').order('created_at', { ascending: false }).limit(5),
+    ])
+    setStats({
+      todayOrders: todayRes.data?.length || 0,
+      todayRevenue: todayRes.data?.reduce((s, o) => s + o.total, 0) || 0,
+      monthOrders: monthRes.data?.length || 0,
+      monthRevenue: monthRes.data?.reduce((s, o) => s + o.total, 0) || 0,
+      totalCustomers: customersRes.count || 0,
+    })
+    setRecentOrders(recentRes.data || [])
+  }
+
+  async function fetchMarkets() {
+    const { data } = await supabase.from('markets').select('*').eq('active', true)
+    setMarkets(data || [])
+  }
+
+  async function fetchActiveMarketDay() {
+    const { data } = await supabase
+      .from('market_days')
+      .select('*, markets(name)')
+      .in('market_date', [today, tomorrow])
+      .in('status', ['active', 'upcoming'])
+      .order('market_date', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    setActiveMarketDay(data || null)
+  }
+
+  async function activateMarketDay(marketId, date) {
+    setActivating(true)
+    try {
+      // Check if one already exists for this date
+      const { data: existing } = await supabase
+        .from('market_days')
+        .select('id, status')
+        .eq('market_id', marketId)
+        .eq('market_date', date)
+        .maybeSingle()
+
+      if (existing) {
+        // Update existing to active
+        await supabase
+          .from('market_days')
+          .update({ status: 'active' })
+          .eq('id', existing.id)
+      } else {
+        // Create new active market day
+        await supabase.from('market_days').insert({
+          market_id: marketId,
+          market_date: date,
+          status: 'active',
+        })
+      }
+      await fetchActiveMarketDay()
+      alert('✅ Market day activated! Agent can now upload products.')
+    } catch (err) {
+      alert('Failed to activate: ' + err.message)
+    }
+    setActivating(false)
+  }
+
+  async function cancelMarketDay() {
+    if (!activeMarketDay) return
+    const confirm = window.confirm('Cancel this market day? Agent will not be able to upload.')
+    if (!confirm) return
+    setCancelling(true)
+    try {
+      await supabase
+        .from('market_days')
+        .update({ status: 'cancelled' })
+        .eq('id', activeMarketDay.id)
+      setActiveMarketDay(null)
+    } catch (err) {
+      alert('Failed to cancel: ' + err.message)
+    }
+    setCancelling(false)
+  }
+
+  const STATUS_COLORS = {
+    paid: '#2D6A4F',
+    packed: '#E85D04',
+    dispatched: '#1B4332',
+    collected: '#74C69D',
+    cancelled: '#999',
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--charcoal)', paddingBottom: 40 }}>
+
+      {/* Header */}
       <div style={{ background: '#111', padding: '24px 20px 28px', borderBottom: '1px solid #222' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 700, margin: '0 auto' }}>
           <div>
             <div style={{ color: '#555', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 4 }}>OWNER DASHBOARD</div>
             <h1 style={{ fontFamily: 'Playfair Display, serif', color: 'white', fontSize: 26, fontWeight: 700 }}>Only Market Days</h1>
           </div>
-          <button onClick={() => { logout(); navigate('/') }} style={{ background: '#222', borderRadius: 8, padding: '8px 14px', color: '#888', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+          <button onClick={() => { logout(); navigate('/') }} style={{ background: '#222', border: 'none', borderRadius: 8, padding: '8px 14px', color: '#888', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
             <LogOut size={15} /> Exit
           </button>
         </div>
       </div>
 
       <div style={{ maxWidth: 700, margin: '0 auto', padding: '20px 16px' }}>
+
+        {/* Today's market status */}
         <div style={{ background: todayMarket ? 'var(--green)' : '#1a1a1a', borderRadius: 14, padding: '18px 20px', marginBottom: 20, border: todayMarket ? 'none' : '1px solid #333' }}>
           {todayMarket ? (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -75,8 +163,124 @@ export default function OwnerDashboard() {
           )}
         </div>
 
+        {/* ── MARKET DAY ACTIVATION ── */}
+        <div style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 14, padding: '20px', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <Calendar size={18} color="var(--gold)" />
+            <div style={{ color: '#aaa', fontSize: 12, fontWeight: 600, letterSpacing: 2 }}>MARKET DAY CONTROL</div>
+          </div>
+
+          {/* Currently active market day */}
+          {activeMarketDay ? (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
+                <span style={{ color: '#22c55e', fontSize: 13, fontWeight: 600 }}>
+                  Active: {activeMarketDay.markets?.name} —{' '}
+                  {activeMarketDay.market_date === today ? 'Today' : 'Tomorrow'}{' '}
+                  ({activeMarketDay.market_date})
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: '#555', marginBottom: 14 }}>
+                Agent can upload products and the buyer app will show live listings.
+              </div>
+              <button
+                onClick={cancelMarketDay}
+                disabled={cancelling}
+                style={{
+                  background: 'rgba(220,38,38,0.1)',
+                  border: '1px solid rgba(220,38,38,0.3)',
+                  borderRadius: 8, padding: '10px 16px',
+                  color: '#dc2626', fontSize: 13, fontWeight: 600,
+                  cursor: cancelling ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  opacity: cancelling ? 0.6 : 1,
+                }}
+              >
+                <XCircle size={15} />
+                {cancelling ? 'Cancelling...' : 'Cancel Market Day'}
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontSize: 13, color: '#555', marginBottom: 14 }}>
+                No active market day. Activate one below so the agent can upload products.
+              </div>
+
+              {/* Activate for today */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ color: '#666', fontSize: 11, fontWeight: 600, letterSpacing: 1, marginBottom: 8 }}>
+                  ACTIVATE FOR TODAY ({today})
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {markets.map(market => (
+                    <button
+                      key={market.id + '-today'}
+                      onClick={() => activateMarketDay(market.id, today)}
+                      disabled={activating}
+                      style={{
+                        background: 'rgba(27,67,50,0.3)',
+                        border: '1px solid rgba(116,198,157,0.3)',
+                        borderRadius: 10, padding: '12px 16px',
+                        color: 'white', fontSize: 14, fontWeight: 600,
+                        cursor: activating ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        opacity: activating ? 0.6 : 1,
+                        textAlign: 'left',
+                      }}
+                    >
+                      <CheckCircle size={18} color="#22c55e" />
+                      <div>
+                        <div>{market.name}</div>
+                        <div style={{ fontSize: 11, color: '#888', fontWeight: 400, marginTop: 2 }}>{market.location}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Activate for tomorrow */}
+              <div>
+                <div style={{ color: '#666', fontSize: 11, fontWeight: 600, letterSpacing: 1, marginBottom: 8, marginTop: 14 }}>
+                  ACTIVATE FOR TOMORROW ({tomorrow})
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {markets.map(market => (
+                    <button
+                      key={market.id + '-tomorrow'}
+                      onClick={() => activateMarketDay(market.id, tomorrow)}
+                      disabled={activating}
+                      style={{
+                        background: 'rgba(212,160,23,0.1)',
+                        border: '1px solid rgba(212,160,23,0.3)',
+                        borderRadius: 10, padding: '12px 16px',
+                        color: 'white', fontSize: 14, fontWeight: 600,
+                        cursor: activating ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        opacity: activating ? 0.6 : 1,
+                        textAlign: 'left',
+                      }}
+                    >
+                      <CheckCircle size={18} color="var(--gold)" />
+                      <div>
+                        <div>{market.name}</div>
+                        <div style={{ fontSize: 11, color: '#888', fontWeight: 400, marginTop: 2 }}>{market.location}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Stats grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
-          {[{ label: "Today's orders", value: stats.todayOrders }, { label: 'Revenue today', value: formatNaira(stats.todayRevenue) }, { label: 'Month revenue', value: formatNaira(stats.monthRevenue) }].map(({ label, value }) => (
+          {[
+            { label: "Today's orders", value: stats.todayOrders },
+            { label: 'Revenue today', value: formatNaira(stats.todayRevenue) },
+            { label: 'Month revenue', value: formatNaira(stats.monthRevenue) },
+          ].map(({ label, value }) => (
             <div key={label} style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 10, padding: '14px 12px' }}>
               <div style={{ color: '#555', fontSize: 11, marginBottom: 6 }}>{label}</div>
               <div style={{ color: 'white', fontFamily: 'DM Mono, monospace', fontSize: 15, fontWeight: 700 }}>{value}</div>
@@ -84,10 +288,15 @@ export default function OwnerDashboard() {
           ))}
         </div>
 
+        {/* Monthly summary */}
         <div style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 14, padding: '20px', marginBottom: 20 }}>
           <div style={{ color: '#555', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 16 }}>THIS MONTH</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-            {[{ label: 'Orders', value: stats.monthOrders, icon: ShoppingBag }, { label: 'Customers', value: stats.totalCustomers, icon: Users }, { label: 'Revenue', value: formatNaira(stats.monthRevenue), icon: TrendingUp }].map(({ label, value, icon: Icon }) => (
+            {[
+              { label: 'Orders', value: stats.monthOrders, icon: ShoppingBag },
+              { label: 'Customers', value: stats.totalCustomers, icon: Users },
+              { label: 'Revenue', value: formatNaira(stats.monthRevenue), icon: TrendingUp },
+            ].map(({ label, value, icon: Icon }) => (
               <div key={label}>
                 <Icon size={20} color="var(--green-muted)" style={{ marginBottom: 8 }} />
                 <div style={{ color: 'white', fontFamily: 'DM Mono, monospace', fontSize: 18, fontWeight: 700, marginBottom: 2 }}>{value}</div>
@@ -97,17 +306,25 @@ export default function OwnerDashboard() {
           </div>
         </div>
 
+        {/* Quick links */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-          <Link to="/owner/orders" style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 12, padding: '16px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div><div style={{ fontSize: 20, marginBottom: 4 }}>📋</div><div style={{ fontWeight: 600, fontSize: 14 }}>All Orders</div></div>
+          <Link to="/owner/orders" style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 12, padding: '16px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none' }}>
+            <div>
+              <div style={{ fontSize: 20, marginBottom: 4 }}>📋</div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>All Orders</div>
+            </div>
             <ArrowRight size={18} color="#555" />
           </Link>
-          <Link to="/owner/analytics" style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 12, padding: '16px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div><div style={{ fontSize: 20, marginBottom: 4 }}>📊</div><div style={{ fontWeight: 600, fontSize: 14 }}>Analytics</div></div>
+          <Link to="/owner/analytics" style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 12, padding: '16px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none' }}>
+            <div>
+              <div style={{ fontSize: 20, marginBottom: 4 }}>📊</div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>Analytics</div>
+            </div>
             <ArrowRight size={18} color="#555" />
           </Link>
         </div>
 
+        {/* Recent orders */}
         <div style={{ color: '#555', fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 14 }}>RECENT ORDERS</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {recentOrders.map(order => (
@@ -118,11 +335,17 @@ export default function OwnerDashboard() {
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontFamily: 'DM Mono, monospace', color: 'var(--green-muted)', fontWeight: 700 }}>{formatNaira(order.total)}</div>
-                <span style={{ background: STATUS_COLORS[order.status] || '#333', color: 'white', fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 600, textTransform: 'uppercase' }}>{order.status}</span>
+                <span style={{ background: STATUS_COLORS[order.status] || '#333', color: 'white', fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 600, textTransform: 'uppercase' }}>
+                  {order.status}
+                </span>
               </div>
             </div>
           ))}
-          {recentOrders.length === 0 && <div style={{ color: '#555', textAlign: 'center', padding: '30px', background: '#1a1a1a', borderRadius: 12 }}>No orders yet</div>}
+          {recentOrders.length === 0 && (
+            <div style={{ color: '#555', textAlign: 'center', padding: '30px', background: '#1a1a1a', borderRadius: 12 }}>
+              No orders yet
+            </div>
+          )}
         </div>
       </div>
     </div>
