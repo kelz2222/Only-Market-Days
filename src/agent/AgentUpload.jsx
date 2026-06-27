@@ -284,13 +284,12 @@ export default function AgentUpload() {
             )}
           </label>
           <input
-            id="img-upload"
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleImage}
-            style={{ display: 'none' }}
-          />
+  id="img-upload"
+  type="file"
+  accept="image/*"
+  onChange={handleImage}
+  style={{ display: 'none' }}
+/>
           {imagePreview && (
             <button
               onClick={() => { setImageFile(null); setImagePreview(null) }}
