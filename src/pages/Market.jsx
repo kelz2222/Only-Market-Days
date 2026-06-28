@@ -624,53 +624,53 @@ export default function Market() {
           : `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`}
       </div>
 
-      {/* Products grid */}
-      {productsLoading ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
-          <p style={{ color: '#888', fontSize: 14 }}>
-            Loading today's produce...
-          </p>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
-          <h3 style={{
-            fontFamily: 'Playfair Display, serif',
-            fontSize: 20, marginBottom: 8,
-          }}>
-            {activeCategory !== 'all'
-              ? 'Nothing in this category yet'
-              : products.length === 0
-              ? 'No listings yet'
-              : 'Nothing found'}
-          </h3>
-          <p style={{ color: '#888', fontSize: 14, lineHeight: 1.6 }}>
-            {activeCategory !== 'all' && products.length > 0
-              ? 'Try a different category or search term.'
-              : 'Listings go live at 12PM the day before market day. The agent uploads products on market morning.'}
-          </p>
-        </div>
-      ) : (
-        <div style={{
-  display: 'grid',
-  gridTemplateColumns: 'repeat(2, 1fr)',
-  gap: 12,
-  padding: '0 16px',
-  maxWidth: 700,
-  margin: '0 auto',
-}}>
-          {filtered.map(product => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              unavailableToday={product.unavailable_today}
-              orderingState={orderingState}
-              onMeatOptionsClick={() => setMeatProduct(product)}
-            />
-          ))}
-        </div>
-      )}
+      {/* Products grid — forced 2 columns */}
+{productsLoading ? (
+  <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+    <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
+    <p style={{ color: '#888', fontSize: 14 }}>
+      Loading today's produce...
+    </p>
+  </div>
+) : filtered.length === 0 ? (
+  <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+    <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
+    <h3 style={{
+      fontFamily: 'Playfair Display, serif',
+      fontSize: 20, marginBottom: 8,
+    }}>
+      {activeCategory !== 'all'
+        ? 'Nothing in this category yet'
+        : products.length === 0
+        ? 'No listings yet'
+        : 'Nothing found'}
+    </h3>
+    <p style={{ color: '#888', fontSize: 14, lineHeight: 1.6 }}>
+      {activeCategory !== 'all' && products.length > 0
+        ? 'Try a different category.'
+        : 'Listings go live at 12PM the day before market day.'}
+    </p>
+  </div>
+) : (
+  <div style={{
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: 12,
+    padding: '0 12px 20px',
+    maxWidth: 700,
+    margin: '0 auto',
+  }}>
+    {filtered.map(product => (
+      <ProductCard
+        key={product.id}
+        product={product}
+        unavailableToday={product.unavailable_today}
+        orderingState={orderingState}
+        onMeatOptionsClick={() => setMeatProduct(product)}
+      />
+    ))}
+  </div>
+)}
 
     </div>
   )
